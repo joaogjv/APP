@@ -60,9 +60,17 @@ export default function Index() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const intervalRef = useRef<number | null>(null);
 
+  // Para a rolagem automática
+  const stopAutoScroll = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
   // Inicia a rolagem automática
   const startAutoScroll = () => {
-    stopAutoScroll(); // garante que não haja intervalos duplicados
+    stopAutoScroll();
     intervalRef.current = setInterval(() => {
       setCarouselIndex(prev => {
         const next = prev + 1 < carouselImages.length ? prev + 1 : 0;
@@ -74,108 +82,98 @@ export default function Index() {
     }, 3000);
   };
 
-  // Para a rolagem automática
-  const stopAutoScroll = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  };
-
-  useEffect(() => {
+  React.useEffect(() => {
     startAutoScroll();
-    return () => stopAutoScroll();
+    return () => {
+      stopAutoScroll();
+    };
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* Botão de compras no canto direito superior */}
-      <View style={styles.shoppingButton}>
-        <MaterialIcons name="shopping-cart" size={30} color={colors.rosa} />
-      </View>
-
-      <Text style={styles.title}>Petit Brigaderia</Text>
-
-      {/* Barra de pesquisa */}
-      <View style={styles.searchBarContainer}>
-        <View style={styles.searchBarWrapper}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="o que voce procura?"
-            placeholderTextColor="#b3afaf"
-          />
-          <FontAwesome name="search" size={22} color={colors.preto} style={styles.searchIcon} />
+    <View style={{ flex: 1 }}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.container}
+      >
+        <Text style={styles.title}>Petit Brigaderia</Text>
+        <View style={styles.searchBarContainer}>
+          <View style={styles.searchBarWrapper}>
+            <TextInput
+              style={styles.searchBar}
+              placeholder="o que voce procura?"
+              placeholderTextColor="#b3afaf"
+            />
+            <FontAwesome name="search" size={22} color={colors.preto} style={styles.searchIcon} />
+          </View>
         </View>
-      </View>
-
-      {/* Carrossel dentro de uma View */}
-      <View style={styles.carouselContainer}>
-        <ScrollView
-          ref={carouselRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carouselRow}
-          onScrollBeginDrag={stopAutoScroll} // pausa rolagem quando o usuário arrasta
-          onScrollEndDrag={startAutoScroll}  // retoma rolagem quando solta
-          onTouchStart={stopAutoScroll}      // pausa quando toca
-          onTouchEnd={startAutoScroll}       // retoma quando solta toque
-        >
-          {carouselImages.map((img, idx) => (
-            <Image key={idx} source={img} style={styles.carouselImage} />
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Linha com 'Sabores' à esquerda e 'ver todos os sabores' à direita */}
-      <View style={styles.saboresRow}>
-        <Text style={styles.saboresText}>Sabores</Text>
-        <View style={styles.verTodosContainer}>
-          <Text style={styles.verTodosText}>ver todos os sabores</Text>
-          <Feather name="arrow-right" size={22} color={colors.rosa} />
+        <View style={styles.carouselContainer}>
+          <ScrollView
+            ref={carouselRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.carouselRow}
+            onScrollBeginDrag={stopAutoScroll}
+            onScrollEndDrag={startAutoScroll}
+            onTouchStart={stopAutoScroll}
+            onTouchEnd={startAutoScroll}
+          >
+            {carouselImages.map((img, idx) => (
+              <Image key={idx} source={img} style={styles.carouselImage} />
+            ))}
+          </ScrollView>
         </View>
-      </View>
-
-      
-      
-      {/* Carrossel de botões de sabores */}
-      <View style={styles.saboresCarrosselContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.saboresCarrosselRow}
-        >
-          {['Brigadeiro', 'Beijinho', 'Coco', 'Morango', 'Paçoca', 'Ovomaltine', 'Nutella'].map((sabor, idx) => (
-            <View key={idx} style={styles.saborButton}>
-              <Text style={styles.saborButtonText}>{sabor}</Text>
+        <View style={styles.saboresRow}>
+          <Text style={styles.saboresText}>Sabores</Text>
+          <View style={styles.verTodosContainer}>
+            <Text style={styles.verTodosText}>ver todos os sabores</Text>
+            <Feather name="arrow-right" size={22} color={colors.rosa} />
+          </View>
+        </View>
+        <View style={styles.saboresCarrosselContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.saboresCarrosselRow}
+          >
+            {['Brigadeiro', 'Beijinho', 'Coco', 'Morango', 'Paçoca', 'Ovomaltine', 'Nutella'].map((sabor, idx) => (
+              <View key={idx} style={styles.saborButton}>
+                <Text style={styles.saborButtonText}>{sabor}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+        <View style={styles.produtosContainer}>
+          {produtos.map((produto, idx) => (
+            <View key={idx} style={styles.produtoCard}>
+              <Image source={produto.img} style={styles.produtoImg} />
+              <Text style={styles.produtoNome}>{produto.nome}</Text>
+              <Text style={styles.produtoPreco}>{produto.preco}</Text>
             </View>
           ))}
-        </ScrollView>
-      </View>
-      {/* Lista de produtos */}
-      <View style={styles.produtosContainer}>
-        {produtos.map((produto, idx) => (
-          <View key={idx} style={styles.produtoCard}>
-            <Image source={produto.img} style={styles.produtoImg} />
-            <Text style={styles.produtoNome}>{produto.nome}</Text>
-            <Text style={styles.produtoPreco}>{produto.preco}</Text>
-          </View>
-        ))}
-      </View>
+        </View>
+        {/* Botão de compras dentro do ScrollView */}
+        <View style={styles.shoppingButton}>
+          <MaterialIcons name="shopping-cart" size={30} color={colors.rosa} />
+        </View>
+      </ScrollView>
     </View>
-    
   );
 }
 
 const styles = StyleSheet.create({
+  //estilo do container de fotos
   fotosContainer: {
     marginTop: 10,
-    marginBottom: 10,
+    marginBottom: 10,//
   },
+  //configuraçao da linha de fotos
   fotosRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row',//
+    alignItems: 'center',//
     paddingHorizontal: 5,
   },
+  //estilo de cada foto
   fotoItem: {
     width: 120,
     height: 120,
@@ -234,20 +232,22 @@ const styles = StyleSheet.create({
   },
   //estilo do botao de compras
   shoppingButton: {
-    position: 'absolute',//posição absoluta
-    top: 30,//distancia do topo
-    right: 25,//distancia da direita
-    zIndex: 10,//garante que o botão fique acima de outros elementos
-    backgroundColor: colors.branco,//cor de fundo branco
-    borderRadius: 20,//bordas arredondadas
-    padding: 6,//espaçamento interno
-    elevation: 3,//elevação para sombra no Android
-    color: colors.preto,//cor do ícone
-    shadowOffset: { width: 0, height: 2 },//sombra no iOS
-    shadowOpacity: 0.2,//opacidade da sombra
-    shadowRadius: 2,//raio da sombra
+  position: 'absolute',
+  top: 30,
+  right: 25,
+  zIndex: 10,
+  backgroundColor: colors.branco,
+  borderRadius: 20,
+  padding: 6,
+  elevation: 3,
+  color: colors.rosa,
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 2,
+  flexDirection: 'row',
+  alignItems: 'center',
   },
-  container: { flex: 1, backgroundColor: colors.branco, padding: 20 },
+  container: { backgroundColor: colors.branco, padding: 20 },
   title: {
     //configuraçao do titulo
     fontSize: 28, //tamanho da fonte
