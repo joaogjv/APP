@@ -1,21 +1,19 @@
 // Importa o ícone FontAwesome do pacote de ícones do Expo
 import { Feather, FontAwesome, MaterialIcons } from '@expo/vector-icons';
-// Importa o React para criar componentes
 import React, { useEffect, useRef, useState } from 'react';
-// Importa componentes e utilitários do React Native
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Dimensions, Image, ScrollView, StyleSheet, Text, TextInput, View, Button } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Obtém a largura da tela do dispositivo
 const { width } = Dimensions.get('window'); // Usado para definir largura das imagens do carrossel
 
 const colors = {
-  //variaveis de cores
   branco: '#ffffff', 
   rosa: '#ff0080',   
   gelo: '#f1f1f1',   
   preto: '#2a2a2a',  
 };
-//carrosel com as imagens
+
 const carouselImages = [
   require('../../assets/images/brigadeiro_de_formatura.png'),
   require('../../assets/images/brigadeiro_natalino.png'),
@@ -26,7 +24,6 @@ const carouselImages = [
   require('../../assets/images/cha.png'),
 ];
 
-// Lista de produtos
 const produtos = [
   {
     nome: 'coração de brigadeiro',
@@ -38,29 +35,34 @@ const produtos = [
     preco: 'R$ 40,00',
     img: require('../../assets/images/venda sem fundo do prato.png'),
   },
-
   {
     nome: 'Caixa de Brigadeiros',
     preco: 'R$ 30,00',
     img: require('../../assets/images/caixa_de_brigadeiros.png'),
   },
-
- {
+  {
     nome: 'Brigadeiros Natalinos',
     preco: 'R$ 50,00',
     img: require('../../assets/images/combo natalino.png'),
   },
-
-   
- 
 ];
 
-export default function Index() {
+interface IndexProps {
+  setUserToken?: (token: string | null) => void;
+}
+
+export default function Index({ setUserToken }: IndexProps) {
   const carouselRef = useRef<ScrollView>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const intervalRef = useRef<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(''); // Novo estado para o e-mail
+  const [name, setName] = useState(''); // Novo estado para o nome
+  const [cpf, setCpf] = useState(''); // Novo estado para o CPF
+  const [isRegistering, setIsRegistering] = useState(false); // Novo estado para controle de registro
 
-  // Para a rolagem automática
   const stopAutoScroll = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -68,7 +70,6 @@ export default function Index() {
     }
   };
 
-  // Inicia a rolagem automática
   const startAutoScroll = () => {
     stopAutoScroll();
     intervalRef.current = setInterval(() => {
@@ -82,12 +83,169 @@ export default function Index() {
     }, 3000);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        console.log('Token encontrado no AsyncStorage:', token); // Log para depuração
+        setIsLoggedIn(!!token);
+      } catch (error) {
+        console.error('Erro ao verificar o token:', error);
+        setIsLoggedIn(false);
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
+  const handleRegister = async () => {
+    try {
+      if (email && name && cpf && username && password) {
+        console.log('Tentativa de registro com:', { email, name, cpf, username, password }); // Log para depuração
+        const storedUsers = await AsyncStorage.getItem('users');
+        const users = storedUsers ? JSON.parse(storedUsers) : [];
+        users.push({ email, name, cpf, username, password });
+        await AsyncStorage.setItem('users', JSON.stringify(users));
+        console.log('Usuários atualizados no AsyncStorage:', users); // Log para depuração
+        alert('Conta registrada com sucesso! Faça login para continuar.');
+        setEmail('');
+        setName('');
+        setCpf('');
+        setUsername('');
+        setPassword('');
+        setIsRegistering(false); // Volta para a tela de login
+      } else {
+        alert('Por favor, preencha todos os campos.');
+        console.log('Registro falhou. Campos vazios.'); // Log para depuração
+      }
+    } catch (error) {
+      console.error('Erro ao registrar conta:', error);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      console.log('Tentativa de login com usuário:', username, 'e senha:', password); // Log para depuração
+      const storedUsers = await AsyncStorage.getItem('users');
+      console.log('Usuários armazenados no AsyncStorage:', storedUsers); // Log para depuração
+      const users: { username: string; password: string }[] = storedUsers ? JSON.parse(storedUsers) : [];
+      const user = users.find(u => u.username === username && u.password === password);
+
+      if (user) {
+        await AsyncStorage.setItem('userToken', 'loggedIn');
+        console.log('Login bem-sucedido, token armazenado.'); // Log para depuração
+        setIsLoggedIn(true);
+      } else {
+        alert('Usuário ou senha incorretos!');
+        console.log('Login falhou. Usuário ou senha incorretos.'); // Log para depuração
+      }
+    } catch (error) {
+      console.error('Erro ao realizar login:', error);
+    }
+  };
+
+  const clearAsyncStorage = async () => {
+    await AsyncStorage.clear();
+    console.log('AsyncStorage limpo.'); // Log para depuração
+    setIsLoggedIn(false);
+  };
+
+  useEffect(() => {
     startAutoScroll();
     return () => {
       stopAutoScroll();
     };
   }, []);
+
+  const switchToRegister = () => {
+    setEmail('');
+    setName('');
+    setCpf('');
+    setUsername('');
+    setPassword('');
+    setIsRegistering(true);
+  };
+
+  if (isRegistering) {
+    return (
+      <View style={styles.loginContainer}>
+        <Text style={styles.loginTitle}>Registrar</Text>
+        <TextInput
+          style={styles.loginInput}
+          placeholder="E-mail"
+          placeholderTextColor="#b3afaf"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.loginInput}
+          placeholder="Nome"
+          placeholderTextColor="#b3afaf"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.loginInput}
+          placeholder="CPF"
+          placeholderTextColor="#b3afaf"
+          value={cpf}
+          onChangeText={setCpf}
+        />
+        <TextInput
+          style={styles.loginInput}
+          placeholder="Nome de Usuário"
+          placeholderTextColor="#b3afaf"
+          value={username}
+          onChangeText={setUsername}
+        />
+        <TextInput
+          style={styles.loginInput}
+          placeholder="Senha"
+          placeholderTextColor="#b3afaf"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+        <View style={styles.loginButtonContainer}>
+          <Button title="Registrar" onPress={handleRegister} color={colors.rosa} />
+        </View>
+        <Text
+          style={{ marginTop: 20, color: colors.rosa, textDecorationLine: 'underline' }}
+          onPress={() => setIsRegistering(false)}
+        >
+          Já tem uma conta? Faça login
+        </Text>
+      </View>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <View style={styles.loginContainer}>
+        <Text style={styles.loginTitle}>Bem-vindo!</Text>
+        <TextInput
+          style={styles.loginInput}
+          placeholder="Usuário"
+          placeholderTextColor="#b3afaf"
+          value={username}
+          onChangeText={setUsername}
+        />
+        <TextInput
+          style={styles.loginInput}
+          placeholder="Senha"
+          placeholderTextColor="#b3afaf"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+        <View style={styles.loginButtonContainer}>
+          <Button title="Entrar" onPress={handleLogin} color={colors.rosa} />
+        </View>
+        <View style={[styles.loginButtonContainer, { marginTop: 10 }]}> {/* Botão de registro */}
+          <Button title="Registrar" onPress={switchToRegister} color={colors.rosa} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -97,6 +255,7 @@ export default function Index() {
         contentContainerStyle={styles.container}
       >
         <Text style={styles.title}>Petit Brigaderia</Text>
+        <Button title="Limpar Login (Logout)" onPress={clearAsyncStorage} />
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBarWrapper}>
             <TextInput
@@ -107,6 +266,7 @@ export default function Index() {
             <FontAwesome name="search" size={22} color={colors.preto} style={styles.searchIcon} />
           </View>
         </View>
+
         <View style={styles.carouselContainer}>
           <ScrollView
             ref={carouselRef}
@@ -123,6 +283,7 @@ export default function Index() {
             ))}
           </ScrollView>
         </View>
+
         <View style={styles.saboresRow}>
           <Text style={styles.saboresText}>Sabores</Text>
           <View style={styles.verTodosContainer}>
@@ -130,6 +291,7 @@ export default function Index() {
             <Feather name="arrow-right" size={22} color={colors.rosa} />
           </View>
         </View>
+
         <View style={styles.saboresCarrosselContainer}>
           <ScrollView
             horizontal
@@ -143,6 +305,7 @@ export default function Index() {
             ))}
           </ScrollView>
         </View>
+
         <View style={styles.produtosContainer}>
           {produtos.map((produto, idx) => (
             <View key={idx} style={styles.produtoCard}>
@@ -152,7 +315,7 @@ export default function Index() {
             </View>
           ))}
         </View>
-        {/* Botão de compras dentro do ScrollView */}
+
         <View style={styles.shoppingButton}>
           <MaterialIcons name="shopping-cart" size={30} color={colors.rosa} />
         </View>
@@ -355,5 +518,40 @@ const styles = StyleSheet.create({
     color: colors.rosa,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  //estilo do container de login
+  loginContainer: {
+    flex: 1, // ocupa toda a tela
+    justifyContent: 'center',//centraliza verticalmente
+    alignItems: 'center',// centraliza horizontalmente
+    backgroundColor: colors.branco,//cor de fundo
+    padding: 20,//espaçamento interno
+  },
+  //estilo do título de login
+  loginTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.rosa,
+    marginBottom: 20,
+  },
+  //estilo dos campos de login
+  loginInput: {
+    width: '90%',//largura do campo
+    height: 50,//altura do campo
+    borderColor: colors.gelo,//cor da borda
+    borderWidth: 1,//largura da borda
+    borderRadius: 25,//bordas arredondadas
+    paddingHorizontal: 15,//espaçamento interno horizontal
+    fontSize: 16,//tamanho da fonte
+    backgroundColor: colors.branco,//cor de fundo
+    color: colors.preto,//cor do texto
+    marginBottom: 15,//espaçamento entre os campos
+    elevation: 2,//elevação para sombra no Android
+  },
+  //estilo do botão de login
+  loginButtonContainer: {
+    width: '90%',//largura do botão
+    borderRadius: 25,//bordas arredondadas
+    overflow: 'hidden',// garante que o botão respeite as bordas arredondadas
   },
 });
