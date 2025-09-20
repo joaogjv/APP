@@ -51,9 +51,89 @@ interface IndexProps {
   setUserToken?: (token: string | null) => void;
 }
 
-// Removido SQLite, usaremos apenas AsyncStorage
+
 
 export default function Index({ setUserToken }: IndexProps) {
+  // Componentes de página
+  const HomePage = () => (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Petit Brigaderia</Text>
+      <Button title="Limpar Login (Logout)" onPress={clearAsyncStorage} />
+      <View style={styles.searchBarContainer}>
+        <View style={styles.searchBarWrapper}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="o que voce procura?"
+            placeholderTextColor="#b3afaf"
+          />
+          <FontAwesome name="search" size={22} color={colors.preto} style={styles.searchIcon} />
+        </View>
+      </View>
+      <View style={styles.carouselContainer}>
+        <ScrollView
+          ref={carouselRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselRow}
+          onScrollBeginDrag={stopAutoScroll}
+          onScrollEndDrag={startAutoScroll}
+          onTouchStart={stopAutoScroll}
+          onTouchEnd={startAutoScroll}
+        >
+          {carouselImages.map((img, idx) => (
+            <Image key={idx} source={img} style={styles.carouselImage} />
+          ))}
+        </ScrollView>
+      </View>
+      <View style={styles.saboresRow}>
+        <Text style={styles.saboresText}>Sabores</Text>
+        <View style={styles.verTodosContainer}>
+          <Text style={styles.verTodosText}>ver todos os sabores</Text>
+          <Feather name="arrow-right" size={22} color={colors.rosa} />
+        </View>
+      </View>
+      <View style={styles.saboresCarrosselContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.saboresCarrosselRow}
+        >
+          {['Brigadeiro', 'Beijinho', 'Coco', 'Morango', 'Paçoca', 'Ovomaltine', 'Nutella'].map((sabor, idx) => (
+            <View key={idx} style={styles.saborButton}>
+              <Text style={styles.saborButtonText}>{sabor}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+      <View style={styles.produtosContainer}>
+        {produtos.map((produto, idx) => (
+          <View key={idx} style={styles.produtoCard}>
+            <Image source={produto.img} style={styles.produtoImg} />
+            <Text style={styles.produtoNome}>{produto.nome}</Text>
+            <Text style={styles.produtoPreco}>{produto.preco}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={styles.shoppingButton}>
+        <MaterialIcons name="shopping-cart" size={30} color={colors.rosa} />
+      </View>
+    </ScrollView>
+  );
+
+  const EncomendasPage = () => (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Encomendas</Text>
+      {/* Conteúdo da página de encomendas */}
+    </ScrollView>
+  );
+
+  const PerfilPage = ({ clearAsyncStorage }: { clearAsyncStorage: () => void }) => (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Perfil</Text>
+      <Button title="Sair" onPress={clearAsyncStorage} color={colors.rosa} />
+      {/* Conteúdo do perfil */}
+    </ScrollView>
+  );
   // Função para formatar CPF
   function formatCpf(value: string) {
     const onlyNums = value.replace(/\D/g, "");
@@ -71,6 +151,7 @@ export default function Index({ setUserToken }: IndexProps) {
     if (formatted.length > 5) formatted = formatted.slice(0, 5) + '-' + formatted.slice(5);
     return formatted.slice(0, 9);
   }
+  const [showEncomendas, setShowEncomendas] = useState(false);
   const carouselRef = useRef<ScrollView>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const intervalRef = useRef<number | null>(null);
@@ -311,77 +392,12 @@ export default function Index({ setUserToken }: IndexProps) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView 
-        style={{ flex: 1 }} 
-        showsVerticalScrollIndicator={false} 
-        contentContainerStyle={styles.container}
-      >
-        <Text style={styles.title}>Petit Brigaderia</Text>
-        <Button title="Limpar Login (Logout)" onPress={clearAsyncStorage} />
-        <View style={styles.searchBarContainer}>
-          <View style={styles.searchBarWrapper}>
-            <TextInput
-              style={styles.searchBar}
-              placeholder="o que voce procura?"
-              placeholderTextColor="#b3afaf"
-            />
-            <FontAwesome name="search" size={22} color={colors.preto} style={styles.searchIcon} />
-          </View>
-        </View>
+      {/* Renderização condicional das páginas */}
+      {activeTab === 'home' && <HomePage />}
+      {activeTab === 'encomendas' && <EncomendasPage />}
+      {activeTab === 'perfil' && <PerfilPage clearAsyncStorage={clearAsyncStorage} />}
 
-        <View style={styles.carouselContainer}>
-          <ScrollView
-            ref={carouselRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.carouselRow}
-            onScrollBeginDrag={stopAutoScroll}
-            onScrollEndDrag={startAutoScroll}
-            onTouchStart={stopAutoScroll}
-            onTouchEnd={startAutoScroll}
-          >
-            {carouselImages.map((img, idx) => (
-              <Image key={idx} source={img} style={styles.carouselImage} />
-            ))}
-          </ScrollView>
-        </View>
-
-        <View style={styles.saboresRow}>
-          <Text style={styles.saboresText}>Sabores</Text>
-          <View style={styles.verTodosContainer}>
-            <Text style={styles.verTodosText}>ver todos os sabores</Text>
-            <Feather name="arrow-right" size={22} color={colors.rosa} />
-          </View>
-        </View>
-
-        <View style={styles.saboresCarrosselContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.saboresCarrosselRow}
-          >
-            {['Brigadeiro', 'Beijinho', 'Coco', 'Morango', 'Paçoca', 'Ovomaltine', 'Nutella'].map((sabor, idx) => (
-              <View key={idx} style={styles.saborButton}>
-                <Text style={styles.saborButtonText}>{sabor}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-
-        <View style={styles.produtosContainer}>
-          {produtos.map((produto, idx) => (
-            <View key={idx} style={styles.produtoCard}>
-              <Image source={produto.img} style={styles.produtoImg} />
-              <Text style={styles.produtoNome}>{produto.nome}</Text>
-              <Text style={styles.produtoPreco}>{produto.preco}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.shoppingButton}>
-          <MaterialIcons name="shopping-cart" size={30} color={colors.rosa} />
-        </View>
-      </ScrollView>
+      {/* Rodapé fixo */}
       <View style={styles.ifoodTabBar}>
         <TouchableOpacity
           style={[styles.ifoodTabButton, activeTab === 'home' && styles.ifoodTabButtonActive]}
@@ -408,6 +424,7 @@ export default function Index({ setUserToken }: IndexProps) {
     </View>
   );
 }
+import Encomendas from './Encomendas';
 
 const styles = StyleSheet.create({
   //estilo do container de fotos
