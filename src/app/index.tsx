@@ -1,7 +1,7 @@
 // Importa o ícone FontAwesome do pacote de ícones do Expo
-import { Feather, FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { Feather, FontAwesome, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TextInput, View, Button } from 'react-native';
+import { Dimensions, Image, ScrollView, StyleSheet, Text, TextInput, View, Button, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Obtém a largura da tela do dispositivo
@@ -51,17 +51,42 @@ interface IndexProps {
   setUserToken?: (token: string | null) => void;
 }
 
+// Removido SQLite, usaremos apenas AsyncStorage
+
 export default function Index({ setUserToken }: IndexProps) {
+  // Função para formatar CPF
+  function formatCpf(value: string) {
+    const onlyNums = value.replace(/\D/g, "");
+    let formatted = onlyNums;
+    if (formatted.length > 3) formatted = formatted.slice(0, 3) + '.' + formatted.slice(3);
+    if (formatted.length > 7) formatted = formatted.slice(0, 7) + '.' + formatted.slice(7);
+    if (formatted.length > 11) formatted = formatted.slice(0, 11) + '-' + formatted.slice(11);
+    return formatted.slice(0, 14);
+  }
+
+  // Função para formatar CEP
+  function formatCep(value: string) {
+    const onlyNums = value.replace(/\D/g, "");
+    let formatted = onlyNums;
+    if (formatted.length > 5) formatted = formatted.slice(0, 5) + '-' + formatted.slice(5);
+    return formatted.slice(0, 9);
+  }
   const carouselRef = useRef<ScrollView>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const intervalRef = useRef<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loggedUser, setLoggedUser] = useState<string | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState(''); // Novo estado para o e-mail
   const [name, setName] = useState(''); // Novo estado para o nome
   const [cpf, setCpf] = useState(''); // Novo estado para o CPF
+  const [cep, setCep] = useState(''); // Novo estado para o CEP
   const [isRegistering, setIsRegistering] = useState(false); // Novo estado para controle de registro
+  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar senha
+  const [keepLogged, setKeepLogged] = useState(false); // Novo estado para manter logado
+  // Estado para aba ativa
+  const [activeTab, setActiveTab] = useState<'home' | 'encomendas' | 'perfil'>('home');
 
   const stopAutoScroll = () => {
     if (intervalRef.current) {
@@ -84,77 +109,71 @@ export default function Index({ setUserToken }: IndexProps) {
   };
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const token = await AsyncStorage.getItem('userToken');
-        console.log('Token encontrado no AsyncStorage:', token); // Log para depuração
-        setIsLoggedIn(!!token);
-      } catch (error) {
-        console.error('Erro ao verificar o token:', error);
-        setIsLoggedIn(false);
-      }
+    // Não restaura login automático ao abrir o app
+    startAutoScroll();
+    return () => {
+      stopAutoScroll();
+      AsyncStorage.removeItem('loggedUser');
+      setUsername('');
+      setPassword('');
     };
-    checkLoginStatus();
   }, []);
 
-  const handleRegister = async () => {
-    try {
-      if (email && name && cpf && username && password) {
-        console.log('Tentativa de registro com:', { email, name, cpf, username, password }); // Log para depuração
-        const storedUsers = await AsyncStorage.getItem('users');
-        const users = storedUsers ? JSON.parse(storedUsers) : [];
-        users.push({ email, name, cpf, username, password });
-        await AsyncStorage.setItem('users', JSON.stringify(users));
-        console.log('Usuários atualizados no AsyncStorage:', users); // Log para depuração
-        alert('Conta registrada com sucesso! Faça login para continuar.');
-        setEmail('');
-        setName('');
-        setCpf('');
-        setUsername('');
-        setPassword('');
-        setIsRegistering(false); // Volta para a tela de login
-      } else {
-        alert('Por favor, preencha todos os campos.');
-        console.log('Registro falhou. Campos vazios.'); // Log para depuração
-      }
-    } catch (error) {
-      console.error('Erro ao registrar conta:', error);
+  const handleRegister = () => {
+    if (email && name && cpf && cep && username && password) {
+      AsyncStorage.getItem('users').then((data) => {
+        let users = data ? JSON.parse(data) : [];
+        if (users.some((u: any) => u.username === username)) {
+          alert('Nome de usuário já existe!');
+          return;
+        }
+        users.push({ email, name, cpf, cep, username, password });
+        AsyncStorage.setItem('users', JSON.stringify(users)).then(() => {
+          // Login automático após registro
+          setIsLoggedIn(true);
+          setLoggedUser(username);
+          if (keepLogged) {
+            AsyncStorage.setItem('loggedUser', username);
+          }
+          setEmail(''); setName(''); setCpf(''); setCep(''); setUsername(''); setPassword('');
+          setIsRegistering(false);
+        });
+      });
+    } else {
+      alert('Preencha todos os campos!');
     }
   };
 
   const handleLogin = async () => {
+    if (!username || !password) {
+      alert("Preencha usuário e senha!");
+      return;
+    }
     try {
-      console.log('Tentativa de login com usuário:', username, 'e senha:', password); // Log para depuração
-      const storedUsers = await AsyncStorage.getItem('users');
-      console.log('Usuários armazenados no AsyncStorage:', storedUsers); // Log para depuração
-      const users: { username: string; password: string }[] = storedUsers ? JSON.parse(storedUsers) : [];
-      const user = users.find(u => u.username === username && u.password === password);
-
+      const data = await AsyncStorage.getItem('users');
+      const users = data ? JSON.parse(data) : [];
+      const user = users.find((u: any) => u.username === username && u.password === password);
       if (user) {
-        await AsyncStorage.setItem('userToken', 'loggedIn');
-        console.log('Login bem-sucedido, token armazenado.'); // Log para depuração
         setIsLoggedIn(true);
+        setLoggedUser(user.username);
+        await AsyncStorage.setItem('loggedUser', user.username);
+        console.log("Login bem-sucedido!");
       } else {
-        alert('Usuário ou senha incorretos!');
-        console.log('Login falhou. Usuário ou senha incorretos.'); // Log para depuração
+        alert("Usuário ou senha incorretos!");
       }
-    } catch (error) {
-      console.error('Erro ao realizar login:', error);
+    } catch (error: any) {
+      console.log("Erro ao realizar login:", error);
     }
   };
 
   const clearAsyncStorage = async () => {
-    await AsyncStorage.clear();
-    console.log('AsyncStorage limpo.'); // Log para depuração
-    setIsLoggedIn(false);
+  await AsyncStorage.removeItem('loggedUser');
+  setIsLoggedIn(false);
+  setLoggedUser(null);
+  setUsername('');  // limpa usuário
+  setPassword('');  // limpa senha
+  console.log('Logout realizado.');
   };
-
-  useEffect(() => {
-    startAutoScroll();
-    return () => {
-      stopAutoScroll();
-    };
-  }, []);
 
   const switchToRegister = () => {
     setEmail('');
@@ -163,6 +182,11 @@ export default function Index({ setUserToken }: IndexProps) {
     setUsername('');
     setPassword('');
     setIsRegistering(true);
+  };
+
+  const handleClearUsers = async () => {
+    await AsyncStorage.removeItem('users');
+    alert('Todos os registros foram apagados!');
   };
 
   if (isRegistering) {
@@ -188,7 +212,18 @@ export default function Index({ setUserToken }: IndexProps) {
           placeholder="CPF"
           placeholderTextColor="#b3afaf"
           value={cpf}
-          onChangeText={setCpf}
+          keyboardType="numeric"
+          maxLength={14}
+          onChangeText={text => setCpf(formatCpf(text))}
+        />
+        <TextInput
+          style={styles.loginInput}
+          placeholder="CEP"
+          placeholderTextColor="#b3afaf"
+          value={cep}
+          keyboardType="numeric"
+          maxLength={9}
+          onChangeText={text => setCep(formatCep(text))}
         />
         <TextInput
           style={styles.loginInput}
@@ -201,10 +236,29 @@ export default function Index({ setUserToken }: IndexProps) {
           style={styles.loginInput}
           placeholder="Senha"
           placeholderTextColor="#b3afaf"
-          secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+          <TouchableOpacity
+            style={{ marginRight: 8 }}
+            onPress={() => setKeepLogged(prev => !prev)}
+          >
+            <View style={{
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              borderWidth: 2,
+              borderColor: colors.rosa,
+              backgroundColor: keepLogged ? colors.rosa : colors.branco,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              {keepLogged && <Feather name="check" size={16} color={colors.branco} />}
+            </View>
+          </TouchableOpacity>
+          <Text style={{ color: colors.preto, fontSize: 16 }}>Manter logado</Text>
+        </View>
         <View style={styles.loginButtonContainer}>
           <Button title="Registrar" onPress={handleRegister} color={colors.rosa} />
         </View>
@@ -229,19 +283,27 @@ export default function Index({ setUserToken }: IndexProps) {
           value={username}
           onChangeText={setUsername}
         />
-        <TextInput
-          style={styles.loginInput}
-          placeholder="Senha"
-          placeholderTextColor="#b3afaf"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={{ width: '90%', flexDirection: 'row', alignItems: 'center', marginBottom: 15, borderWidth: 1, borderColor: colors.gelo, borderRadius: 25, paddingHorizontal: 15, backgroundColor: colors.branco }}>
+          <TextInput
+            style={{ flex: 1, height: 50, fontSize: 16, color: colors.preto }}
+            placeholder="Senha"
+            placeholderTextColor="#b3afaf"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
+            <Feather name={showPassword ? 'eye-off' : 'eye'} size={24} color="#b3afaf" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.loginButtonContainer}>
           <Button title="Entrar" onPress={handleLogin} color={colors.rosa} />
         </View>
         <View style={[styles.loginButtonContainer, { marginTop: 10 }]}> {/* Botão de registro */}
           <Button title="Registrar" onPress={switchToRegister} color={colors.rosa} />
+        </View>
+        <View style={[styles.loginButtonContainer, { marginTop: 10 }]}> {/* Botão de apagar registros */}
+          <Button title="Apagar registros" onPress={handleClearUsers} color={colors.preto} />
         </View>
       </View>
     );
@@ -320,6 +382,29 @@ export default function Index({ setUserToken }: IndexProps) {
           <MaterialIcons name="shopping-cart" size={30} color={colors.rosa} />
         </View>
       </ScrollView>
+      <View style={styles.ifoodTabBar}>
+        <TouchableOpacity
+          style={[styles.ifoodTabButton, activeTab === 'home' && styles.ifoodTabButtonActive]}
+          onPress={() => setActiveTab('home')}
+        >
+          <MaterialIcons name="home" size={32} color={activeTab === 'home' ? colors.rosa : colors.preto} />
+          <Text style={[styles.ifoodTabButtonText, activeTab === 'home' && { color: colors.rosa }]}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.ifoodTabButton, activeTab === 'encomendas' && styles.ifoodTabButtonActive]}
+          onPress={() => setActiveTab('encomendas')}
+        >
+          <MaterialCommunityIcons name="package-variant" size={32} color={activeTab === 'encomendas' ? colors.rosa : colors.preto} />
+          <Text style={[styles.ifoodTabButtonText, activeTab === 'encomendas' && { color: colors.rosa }]}>Encomendas</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.ifoodTabButton, activeTab === 'perfil' && styles.ifoodTabButtonActive]}
+          onPress={() => setActiveTab('perfil')}
+        >
+          <FontAwesome name="user" size={30} color={activeTab === 'perfil' ? colors.rosa : colors.preto} />
+          <Text style={[styles.ifoodTabButtonText, activeTab === 'perfil' && { color: colors.rosa }]}>Perfil</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -410,7 +495,7 @@ const styles = StyleSheet.create({
   flexDirection: 'row',
   alignItems: 'center',
   },
-  container: { backgroundColor: colors.branco, padding: 20 },
+  container: { backgroundColor: colors.branco, padding: 20, paddingBottom: 100 }, // Espaço extra para o rodapé
   title: {
     //configuraçao do titulo
     fontSize: 28, //tamanho da fonte
@@ -553,5 +638,46 @@ const styles = StyleSheet.create({
     width: '90%',//largura do botão
     borderRadius: 25,//bordas arredondadas
     overflow: 'hidden',// garante que o botão respeite as bordas arredondadas
+  },
+  //estilo da barra de navegação inferior
+  ifoodTabBar: {
+    flexDirection: 'row',//alinha os itens em uma linha
+    justifyContent: 'space-between',//espaço entre os botões
+    alignItems: 'center',//alinha os itens verticalmente ao centro
+    width: '100%',//largura total
+    paddingBottom: 24,//espaçamento inferior para área segura
+    paddingTop: 6,//espaçamento superior
+    backgroundColor: colors.branco,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 99,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  ifoodTabButton: {
+    flex: 1,
+    height: 70,
+    marginHorizontal: 8,
+    borderRadius: 24,
+    backgroundColor: colors.branco,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+  },
+  ifoodTabButtonActive: {
+    backgroundColor: '#fff0f6',
+    borderWidth: 2,
+    borderColor: colors.rosa,
+  },
+  ifoodTabButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 2,
+    color: colors.preto,
   },
 });

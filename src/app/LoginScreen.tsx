@@ -19,12 +19,6 @@ export default function LoginScreen({ setUserToken }: { setUserToken: (token: st
     setLoading(false);
   };
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem('userToken');
-    if (setUserToken) setUserToken(null);
-    alert('Logout realizado!');
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tela de Login</Text>
@@ -42,7 +36,6 @@ export default function LoginScreen({ setUserToken }: { setUserToken: (token: st
         onChangeText={setPassword}
       />
       <Button title={loading ? "Entrando..." : "Entrar"} onPress={handleLogin} disabled={loading} />
-      <Button title="Sair" onPress={handleLogout} />
     </View>
   );
 }
