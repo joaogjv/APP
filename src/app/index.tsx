@@ -64,6 +64,10 @@ export default function Index({ setUserToken }: IndexProps) {
 
   // Página Carrinho
   const CarrinhoPage = React.memo(() => {
+  // Chave Pix fictícia
+  const chavePix = 'petitbrigaderia@pix.com';
+  const [modalPagamentoVisible, setModalPagamentoVisible] = React.useState(false);
+  const [formaPagamento, setFormaPagamento] = React.useState<string | null>(null);
     // Função local para remover item do carrinho
     const handleRemoverItem = (idx: number) => {
       setCarrinho(prev => prev.filter((_, i) => i !== idx));
@@ -80,9 +84,8 @@ export default function Index({ setUserToken }: IndexProps) {
 
     // Função para confirmar compra
     const handleConfirmarCompra = () => {
-      if (carrinho.length === 0) return;
-      Alert.alert('Compra confirmada!', 'Sua compra foi realizada com sucesso.');
-      setCarrinho([]);
+  if (carrinho.length === 0) return;
+  setModalPagamentoVisible(true);
     };
 
     return (
@@ -124,6 +127,53 @@ export default function Index({ setUserToken }: IndexProps) {
             >
               <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 20, letterSpacing: 1 }}>Confirmar compra</Text>
             </TouchableOpacity>
+            {/* Modal de forma de pagamento */}
+            <Modal
+              visible={modalPagamentoVisible}
+              transparent
+              animationType="fade"
+            >
+              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ backgroundColor: colors.gelo, borderRadius: 18, padding: 28, alignItems: 'center', width: 320 }}>
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.rosa, marginBottom: 18 }}>Escolha a forma de pagamento:</Text>
+                  {['Pix', 'Dinheiro', 'Crédito'].map(opcao => (
+                    <TouchableOpacity
+                      key={opcao}
+                      style={{ backgroundColor: formaPagamento === opcao ? colors.rosa : colors.branco, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 32, marginBottom: 12, borderWidth: 1, borderColor: colors.rosa, width: '100%' }}
+                      onPress={() => setFormaPagamento(opcao)}
+                    >
+                      <Text style={{ color: formaPagamento === opcao ? colors.branco : colors.rosa, fontSize: 17, fontWeight: 'bold', textAlign: 'center' }}>{opcao}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  {formaPagamento === 'Pix' && (
+                    <View style={{ marginTop: 10, marginBottom: 10, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 16, color: colors.preto, marginBottom: 4 }}>Chave Pix:</Text>
+                      <Text style={{ fontSize: 17, fontWeight: 'bold', color: colors.rosa, marginBottom: 6 }}>{chavePix}</Text>
+                      <Text style={{ fontSize: 16, color: colors.preto }}>Valor: R$ {calcularTotal().toFixed(2).replace('.', ',')}</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity
+                    style={{ backgroundColor: colors.rosa, borderRadius: 16, paddingVertical: 10, paddingHorizontal: 32, marginTop: 10, elevation: 2 }}
+                    onPress={() => {
+                      if (formaPagamento) {
+                        setModalPagamentoVisible(false);
+                        setCarrinho([]);
+                        if (formaPagamento === 'Pix') {
+                          Alert.alert('Compra confirmada!', `Forma de pagamento: Pix\nChave Pix: ${chavePix}\nValor: R$ ${calcularTotal().toFixed(2).replace('.', ',')}`);
+                        } else {
+                          Alert.alert('Compra confirmada!', 'Forma de pagamento: ' + formaPagamento);
+                        }
+                        setFormaPagamento(null);
+                      } else {
+                        Alert.alert('Selecione uma forma de pagamento.');
+                      }
+                    }}
+                  >
+                    <Text style={{ color: colors.branco, fontSize: 16, fontWeight: 'bold', textAlign: 'center' }}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           </>
         )}
       </ScrollView>
@@ -239,7 +289,7 @@ export default function Index({ setUserToken }: IndexProps) {
                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.preto, marginBottom: 4, textAlign: 'center' }}>{produto.nome}</Text>
                 <Text style={{ fontSize: 15, color: colors.rosa, fontWeight: 'bold', textAlign: 'center' }}>{produto.preco}</Text>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.gelo, borderRadius: 18, paddingVertical: 8, paddingHorizontal: 16, marginTop: 8, alignSelf: 'center', elevation: 2, borderWidth: 1, borderColor: colors.rosa }} onPress={() => handleComparar(produto)}>
-                  <FontAwesome name="balance-scale" size={18} color={colors.rosa} style={{ marginRight: 6 }} />
+
                   <Text style={{ color: colors.rosa, fontWeight: 'bold', fontSize: 15 }}>Comparar</Text>
                 </TouchableOpacity>
               </View>
@@ -251,12 +301,144 @@ export default function Index({ setUserToken }: IndexProps) {
     );
   });
 
-  const EncomendasPage = () => (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Encomenda</Text>
-      {/* Conteúdo da página de encomendas */}
-    </ScrollView>
-  );
+  const EncomendasPage: React.FC = () => {
+  // Chave Pix fictícia
+  const chavePix = 'petitbrigaderia@pix.com';
+  const [modalPagamentoVisible, setModalPagamentoVisible] = React.useState(false);
+  const [formaPagamento, setFormaPagamento] = React.useState<string | null>(null);
+  const produtosEncomenda = [
+      {
+        nome: 'Brigadeiro 50% cacau',
+        img: require('../../assets/images/brigadeiro encomenda.jpg'),
+      },
+      { nome: 'Brigadeiro com castanha', img: require('../../assets/images/brigadeiro com castanha.jpg'), },
+  { nome: 'Beijinho', img: require('../../assets/images/beijinho.png'), },
+        { nome: 'Ninho com Nutella', img: require('../../assets/images/Ninho com nutella.png') },
+  { nome: 'Castanha', img: require('../../assets/images/castanha.png') },
+  { nome: 'Doce de leite', img: require('../../assets/images/Doce de liete.png') },
+  { nome: 'Casadinho', img: require('../../assets/images/Casadinho.png') },
+  { nome: 'Chocolate branco', img: require('../../assets/images/chocolate branco.png') },
+  { nome: 'Chocolate com flocos de arroz', img: require('../../assets/images/Chocolate com flocos de arroz.png') },
+  { nome: 'Farinha láctea', img: require('../../assets/images/farinha láctea.png') },
+    ];
+  const [quantidades, setQuantidades] = React.useState<number[]>(Array(produtosEncomenda.length).fill(0));
+    // Persistência das quantidades
+    React.useEffect(() => {
+      (async () => {
+        const salvo = await AsyncStorage.getItem('quantidadesEncomenda');
+        if (salvo) {
+          try {
+            const arr = JSON.parse(salvo);
+            if (Array.isArray(arr) && arr.length === produtosEncomenda.length) {
+              setQuantidades(arr);
+            }
+          } catch {}
+        }
+      })();
+    }, []);
+
+    React.useEffect(() => {
+      AsyncStorage.setItem('quantidadesEncomenda', JSON.stringify(quantidades));
+    }, [quantidades]);
+
+    const alterarQuantidadeDireta = (idx: number, valor: string) => {
+      const num = Math.max(0, parseInt(valor) || 0);
+      setQuantidades(qs => {
+        const novo = [...qs];
+        novo[idx] = num;
+        return novo;
+      });
+    };
+
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: '#fff6fa' }} contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
+        <Text style={{ fontSize: 30, fontWeight: 'bold', color: colors.rosa, marginBottom: 18, textAlign: 'center', letterSpacing: 1 }}>Encomenda</Text>
+        {produtosEncomenda.map((produto, idx) => (
+          <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.gelo, borderRadius: 16, padding: 14, marginBottom: 12, elevation: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              {produto.img && (
+                <Image source={produto.img} style={{ width: 48, height: 48, borderRadius: 12, marginRight: 18, backgroundColor: colors.branco, borderWidth: 1, borderColor: colors.rosa }} />
+              )}
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.preto, flexShrink: 1 }} numberOfLines={2}>{produto.nome}</Text>
+            </View>
+            <TextInput
+              style={{ width: 60, height: 36, backgroundColor: colors.branco, borderRadius: 10, borderWidth: 1, borderColor: colors.rosa, textAlign: 'center', fontSize: 16, fontWeight: 'bold', color: colors.rosa, marginLeft: 24, paddingVertical: 6, letterSpacing: 1 }}
+              keyboardType="numeric"
+              value={quantidades[idx] === 0 ? '' : quantidades[idx].toString()}
+              onChangeText={valor => alterarQuantidadeDireta(idx, valor)}
+              placeholder="Qtd."
+              placeholderTextColor={colors.rosa}
+              maxLength={4}
+            />
+          </View>
+        ))}
+
+        {/* Calculadora de total */}
+        <View style={{ marginTop: 24, backgroundColor: colors.gelo, borderRadius: 16, padding: 18, alignItems: 'center', elevation: 2 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.rosa, marginBottom: 8 }}>Total de unidades: {quantidades.reduce((a, b) => a + b, 0)}</Text>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.preto, marginBottom: 16 }}>
+            Valor total: R$ {(quantidades.reduce((a, b) => a + b, 0) * 2).toFixed(2)}
+          </Text>
+          <TouchableOpacity
+            style={{ backgroundColor: colors.rosa, borderRadius: 22, paddingVertical: 14, paddingHorizontal: 38, elevation: 3, marginTop: 8 }}
+            onPress={() => {
+              setModalPagamentoVisible(true);
+            }}
+          >
+            <Text style={{ color: colors.branco, fontSize: 18, fontWeight: 'bold', letterSpacing: 1 }}>Confirmar pedido</Text>
+          </TouchableOpacity>
+        {/* Modal de forma de pagamento */}
+        <Modal
+          visible={modalPagamentoVisible}
+          transparent
+          animationType="fade"
+        >
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.gelo, borderRadius: 18, padding: 28, alignItems: 'center', width: 320 }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.rosa, marginBottom: 18 }}>Escolha a forma de pagamento:</Text>
+              {['Pix', 'Dinheiro', 'Crédito'].map(opcao => (
+                <TouchableOpacity
+                  key={opcao}
+                  style={{ backgroundColor: formaPagamento === opcao ? colors.rosa : colors.branco, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 32, marginBottom: 12, borderWidth: 1, borderColor: colors.rosa, width: '100%' }}
+                  onPress={() => setFormaPagamento(opcao)}
+                >
+                  <Text style={{ color: formaPagamento === opcao ? colors.branco : colors.rosa, fontSize: 17, fontWeight: 'bold', textAlign: 'center' }}>{opcao}</Text>
+                </TouchableOpacity>
+              ))}
+              {formaPagamento === 'Pix' && (
+                <View style={{ marginTop: 10, marginBottom: 10, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 16, color: colors.preto, marginBottom: 4 }}>Chave Pix:</Text>
+                  <Text style={{ fontSize: 17, fontWeight: 'bold', color: colors.rosa, marginBottom: 6 }}>{chavePix}</Text>
+                  <Text style={{ fontSize: 16, color: colors.preto }}>Valor: R$ {(quantidades.reduce((a, b) => a + b, 0) * 2).toFixed(2).replace('.', ',')}</Text>
+                </View>
+              )}
+              <TouchableOpacity
+                style={{ backgroundColor: colors.rosa, borderRadius: 16, paddingVertical: 10, paddingHorizontal: 32, marginTop: 10, elevation: 2 }}
+                onPress={() => {
+                  if (formaPagamento) {
+                    setModalPagamentoVisible(false);
+                    setQuantidades(Array(produtosEncomenda.length).fill(0));
+                    AsyncStorage.setItem('quantidadesEncomenda', JSON.stringify(Array(produtosEncomenda.length).fill(0)));
+                    if (formaPagamento === 'Pix') {
+                      Alert.alert('Pedido confirmado!', `Forma de pagamento: Pix\nChave Pix: ${chavePix}\nValor: R$ ${(quantidades.reduce((a, b) => a + b, 0) * 2).toFixed(2).replace('.', ',')}`);
+                    } else {
+                      Alert.alert('Pedido confirmado!', 'Forma de pagamento: ' + formaPagamento);
+                    }
+                    setFormaPagamento(null);
+                  } else {
+                    Alert.alert('Selecione uma forma de pagamento.');
+                  }
+                }}
+              >
+                <Text style={{ color: colors.branco, fontSize: 16, fontWeight: 'bold', textAlign: 'center' }}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        </View>
+      </ScrollView>
+    );
+  };
 
   const PerfilPage = ({ clearAsyncStorage, userData, handleDeleteAccount, handleChangePassword }: {
     clearAsyncStorage: () => void,
@@ -272,33 +454,20 @@ export default function Index({ setUserToken }: IndexProps) {
             <FontAwesome name="user-circle" size={90} color={colors.rosa} style={{ marginBottom: 10, shadowColor: colors.preto, shadowOpacity: 0.12, shadowRadius: 8 }} />
             <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.rosa, marginBottom: 2 }}>{userData.name}</Text>
           </View>
-          <View style={{ width: '100%', marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>E-mail:</Text>
-            <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{userData.email}</Text>
-          </View>
-          <View style={{ width: '100%', marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>Celular/Telefone:</Text>
-            <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{userData.telefone}</Text>
-          </View>
-          <View style={{ width: '100%', marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>Data de nascimento:</Text>
-            <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{userData.nascimento}</Text>
-          </View>
-          <View style={{ width: '100%', marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>CPF:</Text>
-            <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{userData.cpf}</Text>
-          </View>
-          <View style={{ width: '100%', marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>CEP:</Text>
-            <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{userData.cep}</Text>
-          </View>
-          <View style={{ width: '100%', marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>Endereço:</Text>
-            <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{userData.endereco}</Text>
-          </View>
-          <View style={{ width: '100%', marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>Usuário:</Text>
-            <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{userData.username}</Text>
+          {/* Informações alinhadas lado a lado */}
+          <View style={{ width: '100%' }}>
+            {[{ label: 'E-mail:', value: userData.email },
+              { label: 'Celular/Telefone:', value: userData.telefone },
+              { label: 'Data de nascimento:', value: userData.nascimento },
+              { label: 'CPF:', value: userData.cpf },
+              { label: 'CEP:', value: userData.cep },
+              { label: 'Endereço:', value: userData.endereco },
+              { label: 'Usuário:', value: userData.username }].map((item, idx) => (
+                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, width: '100%' }}>
+                  <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>{item.label}</Text>
+                  <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{item.value}</Text>
+                </View>
+            ))}
           </View>
           <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.rosa, paddingVertical: 14, paddingHorizontal: 22, borderRadius: 28, marginBottom: 14, width: '80%', alignSelf: 'center', elevation: 2 }} onPress={handleChangePassword}>
             <FontAwesome name="lock" size={22} color={colors.branco} style={{ marginRight: 8 }} />
@@ -676,20 +845,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     resizeMode: 'cover',
   },
-  //estilo do botao comparar
-  compararBtn: {
-    flexDirection: 'row',//alinha os itens em uma linha
-    alignItems: 'center',//alinha os itens verticalmente ao centro
-    backgroundColor: colors.gelo,//cor de fundo
-    borderRadius: 18,//bordas arredondadas
-    paddingVertical: 7,//espaçamento interno vertical
-    paddingHorizontal: 14,//espaçamento interno horizontal
-    marginTop: 8,//espaçamento entre o preço e o botão
-    alignSelf: 'center',//centraliza o botão horizontalmente
-    elevation: 1,//elevação para sombra no Android
-    borderWidth: 1,//largura da borda
-    borderColor: colors.rosa,//cor da borda
-  },
+ 
+  
   //estilo do texto do botao comparar
   compararBtnText: {//estilo do texto do botao comparar
     color: colors.rosa,//cor do texto
@@ -764,23 +921,7 @@ const styles = StyleSheet.create({
     marginRight: 2,//espaçamento entre o texto e o ícone
     borderColor: colors.rosa,//cor da borda
   },
-  //estilo do botao de compras
-  shoppingButton: {
-  position: 'absolute',
-  top: 30,
-  right: 25,
-  zIndex: 10,
-  backgroundColor: colors.branco,
-  borderRadius: 20,
-  padding: 6,
-  elevation: 3,
-  color: colors.rosa,
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.2,
-  shadowRadius: 2,
-  flexDirection: 'row',
-  alignItems: 'center',
-  },
+ 
   container: { backgroundColor: colors.branco, padding: 20, paddingBottom: 100 }, // Espaço extra para o rodapé
   title: {
     //configuraçao do titulo
@@ -807,7 +948,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,//altura da barra de pesquisa
     borderColor: colors.preto,//cor da borda
-    borderWidth: 1,//largura da borda
+    borderWidth: 2,//largura da borda
     borderRadius: 20,//borda arredondada
     paddingHorizontal: 12,//espaçamento interno do texto
     fontSize: 16,//tamanho da fonte
@@ -959,7 +1100,7 @@ const styles = StyleSheet.create({
   //estilo do botão ativo
   ifoodTabButtonActive: {
     backgroundColor: '#fff0f6',//cor de fundo do botão ativo
-    borderWidth: 2,//largura da borda
+    borderWidth: 1,//largura da borda
     borderColor: colors.rosa,//cor da borda
   },
   //estilo do texto dos botões
