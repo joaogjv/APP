@@ -1,23 +1,18 @@
 // ...existing code...
-// Importa o ícone FontAwesome do pacote de ícones do Expo
+// ===================== IMPORTS =====================
 import { Feather, FontAwesome, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal } from 'react-native';
-import { Alert } from 'react-native';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TextInput, View, Button, TouchableOpacity } from 'react-native';
-import { Animated } from 'react-native';
+import { Modal, Alert, Dimensions, Image, ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Obtém a largura da tela do dispositivo
-const { width } = Dimensions.get('window'); // Usado para definir largura das imagens do carrossel
-
+// ===================== CONSTANTES =====================
+const { width } = Dimensions.get('window'); // Largura da tela
 const colors = {
-  branco: '#ffffff', 
-  rosa: '#ff0080',   
-  gelo: '#f1f1f1',   
-  preto: '#2a2a2a',  
+  branco: '#ffffff',
+  rosa: '#ff0080',
+  gelo: '#f1f1f1',
+  preto: '#2a2a2a',
 };
-
 const carouselImages = [
   require('../../assets/images/brigadeiro_de_formatura.png'),
   require('../../assets/images/brigadeiro_natalino.png'),
@@ -27,43 +22,33 @@ const carouselImages = [
   require('../../assets/images/coracao_de_brigadeiro.png'),
   require('../../assets/images/cha.png'),
 ];
-
 const produtos = [
-  {
-    nome: 'coração de brigadeiro',
-    preco: 'R$ 25,00',
-    img: require('../../assets/images/foto sem fundo do coracao.png'),
-  },
-  {
-    nome: 'Prato de Brigadeiro',
-    preco: 'R$ 40,00',
-    img: require('../../assets/images/venda sem fundo do prato.png'),
-  },
-  {
-    nome: 'Caixa de Brigadeiros',
-    preco: 'R$ 30,00',
-    img: require('../../assets/images/caixa_de_brigadeiros.png'),
-  },
-  {
-    nome: 'Brigadeiros Natalinos',
-    preco: 'R$ 50,00',
-    img: require('../../assets/images/combo natalino.png'),
-  },
-  
+  { nome: 'coração de brigadeiro', preco: 'R$ 25,00', img: require('../../assets/images/foto sem fundo do coracao.png') },
+  { nome: 'Prato de Brigadeiro', preco: 'R$ 40,00', img: require('../../assets/images/venda sem fundo do prato.png') },
+  { nome: 'Caixa de Brigadeiros', preco: 'R$ 30,00', img: require('../../assets/images/caixa_de_brigadeiros.png') },
+  { nome: 'Brigadeiros Natalinos', preco: 'R$ 50,00', img: require('../../assets/images/combo natalino.png') },
 ];
 
+// ===================== TIPOS =====================
 interface IndexProps {
   setUserToken?: (token: string | null) => void;
 }
 
-
-
+// ===================== COMPONENTE PRINCIPAL =====================
 export default function Index({ setUserToken }: IndexProps) {
   // Estado do carrinho de compras
   const [carrinho, setCarrinho] = useState<any[]>([]);
+  // Estado da aba ativa
+  // Removido: já existe declaração de activeTab/setActiveTab mais abaixo
 
   // Página Carrinho
   const CarrinhoPage = React.memo(() => {
+  const [numeroCasa, setNumeroCasa] = React.useState('');
+  const [bairro, setBairro] = React.useState('');
+  const [referencia, setReferencia] = React.useState('');
+  // Estado para modal de endereço
+  const [modalEnderecoVisible, setModalEnderecoVisible] = React.useState(false);
+  const [enderecoEntrega, setEnderecoEntrega] = React.useState(userData?.endereco || '');
   // Chave Pix fictícia
   const chavePix = 'petitbrigaderia@pix.com';
   const [modalPagamentoVisible, setModalPagamentoVisible] = React.useState(false);
@@ -85,7 +70,7 @@ export default function Index({ setUserToken }: IndexProps) {
     // Função para confirmar compra
     const handleConfirmarCompra = () => {
   if (carrinho.length === 0) return;
-  setModalPagamentoVisible(true);
+  setModalEnderecoVisible(true);
     };
 
     return (
@@ -127,6 +112,63 @@ export default function Index({ setUserToken }: IndexProps) {
             >
               <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 20, letterSpacing: 1 }}>Confirmar compra</Text>
             </TouchableOpacity>
+            {/* Modal de confirmação/edição de endereço */}
+            <Modal
+              visible={modalEnderecoVisible}
+              transparent
+              animationType="fade"
+            >
+              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ backgroundColor: colors.gelo, borderRadius: 18, padding: 28, alignItems: 'center', width: 320 }}>
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.rosa, marginBottom: 18 }}>Confirme o endereço de entrega:</Text>
+                  <TextInput
+                    style={{ width: '100%', height: 44, backgroundColor: colors.branco, borderRadius: 10, borderWidth: 1, borderColor: colors.rosa, textAlign: 'left', fontSize: 16, color: colors.preto, marginBottom: 10, paddingHorizontal: 10 }}
+                    value={enderecoEntrega}
+                    onChangeText={setEnderecoEntrega}
+                    placeholder="Endereço (Rua, Avenida...)"
+                    placeholderTextColor={colors.rosa}
+                  />
+                  <TextInput
+                    style={{ width: '100%', height: 44, backgroundColor: colors.branco, borderRadius: 10, borderWidth: 1, borderColor: colors.rosa, textAlign: 'left', fontSize: 16, color: colors.preto, marginBottom: 10, paddingHorizontal: 10 }}
+                    value={numeroCasa}
+                    onChangeText={setNumeroCasa}
+                    placeholder="Número da casa/apto"
+                    placeholderTextColor={colors.rosa}
+                  />
+                  <TextInput
+                    style={{ width: '100%', height: 44, backgroundColor: colors.branco, borderRadius: 10, borderWidth: 1, borderColor: colors.rosa, textAlign: 'left', fontSize: 16, color: colors.preto, marginBottom: 10, paddingHorizontal: 10 }}
+                    value={bairro}
+                    onChangeText={setBairro}
+                    placeholder="Bairro"
+                    placeholderTextColor={colors.rosa}
+                  />
+                  <TextInput
+                    style={{ width: '100%', height: 44, backgroundColor: colors.branco, borderRadius: 10, borderWidth: 1, borderColor: colors.rosa, textAlign: 'left', fontSize: 16, color: colors.preto, marginBottom: 10, paddingHorizontal: 10 }}
+                    value={referencia}
+                    onChangeText={setReferencia}
+                    placeholder="Referência (próximo de...)"
+                    placeholderTextColor={colors.rosa}
+                  />
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                    <TouchableOpacity
+                      style={{ backgroundColor: colors.rosa, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24, marginRight: 8, elevation: 2 }}
+                      onPress={() => {
+                        setModalEnderecoVisible(false);
+                        setModalPagamentoVisible(true);
+                      }}
+                    >
+                      <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 16 }}>Confirmar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ backgroundColor: colors.preto, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24, elevation: 2 }}
+                      onPress={() => setModalEnderecoVisible(false)}
+                    >
+                      <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 16 }}>Cancelar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
             {/* Modal de forma de pagamento */}
             <Modal
               visible={modalPagamentoVisible}
@@ -182,6 +224,9 @@ export default function Index({ setUserToken }: IndexProps) {
 
   // HomePage memoizado e com auto scroll local
   const HomePage = React.memo(() => {
+  // Estado para modal de zoom do produto
+  const [zoomVisible, setZoomVisible] = useState(false);
+  const [zoomProduto, setZoomProduto] = useState<{img: any, nome: string, preco: string} | null>(null);
     // Função para remover item do carrinho
     const handleRemoverItem = (idx: number) => {
       setCarrinho(prev => prev.filter((_, i) => i !== idx));
@@ -234,7 +279,7 @@ export default function Index({ setUserToken }: IndexProps) {
             <FontAwesome name="search" size={22} color={colors.rosa} style={{ position: 'absolute', right: 18, top: '50%', transform: [{ translateY: -11 }], zIndex: 1 }} />
           </View>
         </View>
-        <View style={{ marginBottom: 14 }}>
+        <View style={{ marginBottom: 14, backgroundColor: '#fff6fa', borderRadius: 20 }}>
           <ScrollView
             ref={carouselRef}
             horizontal
@@ -242,7 +287,9 @@ export default function Index({ setUserToken }: IndexProps) {
             contentContainerStyle={{ flexDirection: 'row', paddingHorizontal: 0 }}
           >
             {carouselImages.map((img, idx) => (
-              <Image key={idx} source={img} style={{ width: width * 0.9, height: 250, resizeMode: 'center', borderRadius: 22, marginRight: 0, borderWidth: 2, borderColor: colors.rosa, backgroundColor: colors.gelo }} />
+              <View key={idx} style={{ width: width * 0.9, height: 200, borderRadius: 40, overflow: 'hidden', marginRight: 0, backgroundColor: '#fff6fa', justifyContent: 'center', alignItems: 'center'}}>
+                <Image source={img} style={{ width: '100%', height: '100%', resizeMode: 'center', borderRadius: 40, backgroundColor: '#fff6fa' }} />
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -285,23 +332,44 @@ export default function Index({ setUserToken }: IndexProps) {
                   shadowRadius: 8,
                 }}
               >
-                <Image source={produto.img} style={{ width: 100, height: 110, borderRadius: 14, marginBottom: 8, resizeMode: 'cover', borderWidth: 2, borderColor: colors.rosa, backgroundColor: colors.branco }} />
+                <TouchableOpacity activeOpacity={0.8} onPress={() => { setZoomProduto(produto); setZoomVisible(true); }}>
+                  <Image source={produto.img} style={{ width: 100, height: 110, borderRadius: 14, marginBottom: 8, resizeMode: 'cover', borderWidth: 2, borderColor: colors.rosa, backgroundColor: colors.branco }} />
+                </TouchableOpacity>
                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.preto, marginBottom: 4, textAlign: 'center' }}>{produto.nome}</Text>
                 <Text style={{ fontSize: 15, color: colors.rosa, fontWeight: 'bold', textAlign: 'center' }}>{produto.preco}</Text>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.gelo, borderRadius: 18, paddingVertical: 8, paddingHorizontal: 16, marginTop: 8, alignSelf: 'center', elevation: 2, borderWidth: 1, borderColor: colors.rosa }} onPress={() => handleComparar(produto)}>
-
-                  <Text style={{ color: colors.rosa, fontWeight: 'bold', fontSize: 15 }}>Comparar</Text>
+                    <Text style={{ color: colors.rosa, fontWeight: 'bold', fontSize: 15 }}>Comprar</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         </View>
-        {/* Carrinho removido da HomePage */}
+        {/* Modal de zoom do produto */}
+        <Modal visible={zoomVisible && !!zoomProduto} transparent animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.branco, borderRadius: 30, padding: 18, alignItems: 'center', width: '85%' }}>
+              {zoomProduto?.img && (
+                <Image source={zoomProduto.img} style={{ width: 260, height: 260, borderRadius: 22, marginBottom: 18, resizeMode: 'contain', backgroundColor: colors.branco, borderWidth: 3, borderColor: colors.rosa }} />
+              )}
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.rosa, marginBottom: 8, textAlign: 'center' }}>{zoomProduto?.nome}</Text>
+              <Text style={{ fontSize: 18, color: colors.preto, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>{zoomProduto?.preco}</Text>
+              <TouchableOpacity style={{ marginTop: 8, backgroundColor: colors.rosa, borderRadius: 18, paddingVertical: 10, paddingHorizontal: 32 }} onPress={() => setZoomVisible(false)}>
+                <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 18 }}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     );
   });
 
-  const EncomendasPage: React.FC = () => {
+  const EncomendasPage: React.FC<{ carrinho: any[], setCarrinho: React.Dispatch<any>, setActiveTab: React.Dispatch<React.SetStateAction<'home' | 'encomenda' | 'perfil' | 'carrinho'>> }> = ({ carrinho, setCarrinho, setActiveTab }) => {
+  // Estado para modal de compra individual
+  const [modalComprarIdx, setModalComprarIdx] = useState<number | null>(null);
+  const [quantidadeComprar, setQuantidadeComprar] = useState('');
+  // Estado para modal de zoom do produto
+  const [zoomVisible, setZoomVisible] = useState(false);
+  const [zoomProduto, setZoomProduto] = useState<{img: any, nome: string} | null>(null);
   // Chave Pix fictícia
   const chavePix = 'petitbrigaderia@pix.com';
   const [modalPagamentoVisible, setModalPagamentoVisible] = React.useState(false);
@@ -322,6 +390,7 @@ export default function Index({ setUserToken }: IndexProps) {
   { nome: 'Farinha láctea', img: require('../../assets/images/farinha láctea.png') },
     ];
   const [quantidades, setQuantidades] = React.useState<number[]>(Array(produtosEncomenda.length).fill(0));
+  // Usa setCarrinho recebido por props
     // Persistência das quantidades
     React.useEffect(() => {
       (async () => {
@@ -351,43 +420,123 @@ export default function Index({ setUserToken }: IndexProps) {
     };
 
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: '#fff6fa' }} contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
-        <Text style={{ fontSize: 30, fontWeight: 'bold', color: colors.rosa, marginBottom: 18, textAlign: 'center', letterSpacing: 1 }}>Encomenda</Text>
+  <ScrollView style={{ flex: 1, backgroundColor: '#fff6fa' }} contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
+        <Text
+          style={{
+            fontSize: 30,
+            fontWeight: 'bold',
+            color: colors.rosa,
+            marginBottom: 18,
+            textAlign: 'center',
+            letterSpacing: 1,
+          }}
+        >
+          Encomenda
+        </Text>
         {produtosEncomenda.map((produto, idx) => (
           <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.gelo, borderRadius: 16, padding: 14, marginBottom: 12, elevation: 2 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               {produto.img && (
-                <Image source={produto.img} style={{ width: 48, height: 48, borderRadius: 12, marginRight: 18, backgroundColor: colors.branco, borderWidth: 1, borderColor: colors.rosa }} />
+                <TouchableOpacity activeOpacity={0.8} onPress={() => { setZoomProduto(produto); setZoomVisible(true); }}>
+                  <Image source={produto.img} style={{ width: 48, height: 48, borderRadius: 12, marginRight: 18, backgroundColor: colors.branco, borderWidth: 1, borderColor: colors.rosa }} />
+                </TouchableOpacity>
               )}
               <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.preto, flexShrink: 1 }} numberOfLines={2}>{produto.nome}</Text>
             </View>
-            <TextInput
-              style={{ width: 60, height: 36, backgroundColor: colors.branco, borderRadius: 10, borderWidth: 1, borderColor: colors.rosa, textAlign: 'center', fontSize: 16, fontWeight: 'bold', color: colors.rosa, marginLeft: 24, paddingVertical: 6, letterSpacing: 1 }}
-              keyboardType="numeric"
-              value={quantidades[idx] === 0 ? '' : quantidades[idx].toString()}
-              onChangeText={valor => alterarQuantidadeDireta(idx, valor)}
-              placeholder="Qtd."
-              placeholderTextColor={colors.rosa}
-              maxLength={4}
-            />
+            {/* Campo de quantidade removido, agora só botão Comprar */}
+            <TouchableOpacity
+              style={{ marginLeft: 8, backgroundColor: colors.rosa, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 18, elevation: 2 }}
+              onPress={() => {
+                setModalComprarIdx(idx);
+                setQuantidadeComprar(quantidades[idx] === 0 ? '' : quantidades[idx].toString());
+              }}
+            >
+              <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 15 }}>Comprar</Text>
+            </TouchableOpacity>
+            {/* Modal para informar quantidade ao comprar */}
+            {modalComprarIdx === idx && (
+              <Modal
+                visible={true}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setModalComprarIdx(null)}
+              >
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+                  <View style={{ backgroundColor: colors.gelo, borderRadius: 18, padding: 28, alignItems: 'center', width: 320 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.rosa, marginBottom: 12 }}>Informe a quantidade:</Text>
+                    <TextInput
+                      style={{ width: 80, height: 40, backgroundColor: colors.branco, borderRadius: 10, borderWidth: 1, borderColor: colors.rosa, textAlign: 'center', fontSize: 18, fontWeight: 'bold', color: colors.rosa, marginBottom: 8, paddingVertical: 6, letterSpacing: 1 }}
+                      keyboardType="numeric"
+                      value={quantidadeComprar}
+                      onChangeText={setQuantidadeComprar}
+                      placeholder="Qtd."
+                      placeholderTextColor={colors.rosa}
+                      maxLength={4}
+                      autoFocus
+                    />
+                    {/* Preço total abaixo do campo de quantidade */}
+                    <Text style={{ fontSize: 16, color: colors.rosa, fontWeight: 'bold', marginBottom: 18 }}>
+                      Total: R$ {(Math.max(0, parseInt(quantidadeComprar) || 0) * 2).toFixed(2).replace('.', ',')}
+                    </Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                      <TouchableOpacity
+                        style={{ backgroundColor: colors.rosa, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24, marginRight: 8, elevation: 2 }}
+                        onPress={() => {
+                          const num = Math.max(0, parseInt(quantidadeComprar) || 0);
+                          if (num > 0) {
+                            setCarrinho((prev: any[]) => [
+                              ...(prev ?? []),
+                              {
+                                ...produtosEncomenda[idx],
+                                quantidade: num,
+                                preco: `R$ ${(num * 2).toFixed(2).replace('.', ',')}`
+                              }
+                            ]);
+                            Alert.alert('Produto adicionado ao carrinho!', `${produtosEncomenda[idx].nome} (${num} unidade${num > 1 ? 's' : ''}) foi adicionado ao carrinho.`);
+                          }
+                          setQuantidades(qs => {
+                            const novo = [...qs];
+                            novo[idx] = num;
+                            setTimeout(() => {
+                              const reset = [...novo];
+                              reset[idx] = 0;
+                              setQuantidades(reset);
+                            }, 300);
+                            return novo;
+                          });
+                          setModalComprarIdx(null);
+                        }}
+                      >
+                        <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 16 }}>Confirmar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{ backgroundColor: colors.preto, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24, elevation: 2 }}
+                        onPress={() => setModalComprarIdx(null)}
+                      >
+                        <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 16 }}>Cancelar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
+            )}
           </View>
         ))}
 
-        {/* Calculadora de total */}
-        <View style={{ marginTop: 24, backgroundColor: colors.gelo, borderRadius: 16, padding: 18, alignItems: 'center', elevation: 2 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.rosa, marginBottom: 8 }}>Total de unidades: {quantidades.reduce((a, b) => a + b, 0)}</Text>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.preto, marginBottom: 16 }}>
-            Valor total: R$ {(quantidades.reduce((a, b) => a + b, 0) * 2).toFixed(2)}
-          </Text>
-          <TouchableOpacity
-            style={{ backgroundColor: colors.rosa, borderRadius: 22, paddingVertical: 14, paddingHorizontal: 38, elevation: 3, marginTop: 8 }}
-            onPress={() => {
-              setModalPagamentoVisible(true);
-            }}
-          >
-            <Text style={{ color: colors.branco, fontSize: 18, fontWeight: 'bold', letterSpacing: 1 }}>Confirmar pedido</Text>
-          </TouchableOpacity>
-        {/* Modal de forma de pagamento */}
+        {/* Modal de zoom do produto */}
+        <Modal visible={zoomVisible && !!zoomProduto} transparent animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.branco, borderRadius: 30, padding: 18, alignItems: 'center', width: '85%' }}>
+              {zoomProduto?.img && (
+                <Image source={zoomProduto.img} style={{ width: 220, height: 220, borderRadius: 18, marginBottom: 18, resizeMode: 'contain', backgroundColor: colors.branco, borderWidth: 2, borderColor: colors.rosa }} />
+              )}
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.rosa, marginBottom: 8, textAlign: 'center' }}>{zoomProduto?.nome}</Text>
+              <TouchableOpacity style={{ marginTop: 8, backgroundColor: colors.rosa, borderRadius: 18, paddingVertical: 10, paddingHorizontal: 32 }} onPress={() => setZoomVisible(false)}>
+                <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 18 }}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         <Modal
           visible={modalPagamentoVisible}
           transparent
@@ -405,25 +554,28 @@ export default function Index({ setUserToken }: IndexProps) {
                   <Text style={{ color: formaPagamento === opcao ? colors.branco : colors.rosa, fontSize: 17, fontWeight: 'bold', textAlign: 'center' }}>{opcao}</Text>
                 </TouchableOpacity>
               ))}
-              {formaPagamento === 'Pix' && (
-                <View style={{ marginTop: 10, marginBottom: 10, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 16, color: colors.preto, marginBottom: 4 }}>Chave Pix:</Text>
-                  <Text style={{ fontSize: 17, fontWeight: 'bold', color: colors.rosa, marginBottom: 6 }}>{chavePix}</Text>
-                  <Text style={{ fontSize: 16, color: colors.preto }}>Valor: R$ {(quantidades.reduce((a, b) => a + b, 0) * 2).toFixed(2).replace('.', ',')}</Text>
-                </View>
-              )}
               <TouchableOpacity
                 style={{ backgroundColor: colors.rosa, borderRadius: 16, paddingVertical: 10, paddingHorizontal: 32, marginTop: 10, elevation: 2 }}
                 onPress={() => {
                   if (formaPagamento) {
+                    // Adiciona os itens da encomenda ao carrinho individualmente, com alerta igual à Home
+                    const novosItens = produtosEncomenda
+                      .map((produto, idx) => ({
+                        ...produto,
+                        preco: `R$ ${(quantidades[idx] * 2).toFixed(2).replace('.', ',')}`,
+                        quantidade: quantidades[idx]
+                      }))
+                      .filter(item => item.quantidade > 0);
+                    novosItens.forEach(item => {
+                      setCarrinho((prev: any[]) => [...prev, item]);
+                      Alert.alert('Produto adicionado ao carrinho!', `${item.nome} foi adicionado para comparação.`);
+                    });
+                    if (novosItens.length > 0) {
+                      setActiveTab('carrinho');
+                    }
                     setModalPagamentoVisible(false);
                     setQuantidades(Array(produtosEncomenda.length).fill(0));
                     AsyncStorage.setItem('quantidadesEncomenda', JSON.stringify(Array(produtosEncomenda.length).fill(0)));
-                    if (formaPagamento === 'Pix') {
-                      Alert.alert('Pedido confirmado!', `Forma de pagamento: Pix\nChave Pix: ${chavePix}\nValor: R$ ${(quantidades.reduce((a, b) => a + b, 0) * 2).toFixed(2).replace('.', ',')}`);
-                    } else {
-                      Alert.alert('Pedido confirmado!', 'Forma de pagamento: ' + formaPagamento);
-                    }
                     setFormaPagamento(null);
                   } else {
                     Alert.alert('Selecione uma forma de pagamento.');
@@ -435,7 +587,6 @@ export default function Index({ setUserToken }: IndexProps) {
             </View>
           </View>
         </Modal>
-        </View>
       </ScrollView>
     );
   };
@@ -454,21 +605,50 @@ export default function Index({ setUserToken }: IndexProps) {
             <FontAwesome name="user-circle" size={90} color={colors.rosa} style={{ marginBottom: 10, shadowColor: colors.preto, shadowOpacity: 0.12, shadowRadius: 8 }} />
             <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.rosa, marginBottom: 2 }}>{userData.name}</Text>
           </View>
-          {/* Informações alinhadas lado a lado */}
-          <View style={{ width: '100%' }}>
-            {[{ label: 'E-mail:', value: userData.email },
-              { label: 'Celular/Telefone:', value: userData.telefone },
-              { label: 'Data de nascimento:', value: userData.nascimento },
-              { label: 'CPF:', value: userData.cpf },
-              { label: 'CEP:', value: userData.cep },
-              { label: 'Endereço:', value: userData.endereco },
-              { label: 'Usuário:', value: userData.username }].map((item, idx) => (
-                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, width: '100%' }}>
-                  <Text style={{ fontWeight: 'bold', color: colors.preto, fontSize: 16 }}>{item.label}</Text>
-                  <Text style={{ color: colors.rosa, fontSize: 16, fontWeight: '500', textAlign: 'right' }}>{item.value}</Text>
-                </View>
-            ))}
+          {/* Bloco: Dados Pessoais */}
+          <View style={{ width: '100%', marginBottom: 18, backgroundColor: colors.branco, borderRadius: 16, padding: 16, elevation: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+              <FontAwesome name="id-card" size={22} color={colors.rosa} style={{ marginRight: 8 }} />
+              <Text style={{ fontWeight: 'bold', color: colors.rosa, fontSize: 18 }}>Dados Pessoais</Text>
+            </View>
+            <View style={{ marginLeft: 8 }}>
+              <Text style={{ color: colors.preto, fontSize: 16 }}>CPF: <Text style={{ color: colors.rosa }}>{userData.cpf}</Text></Text>
+              <Text style={{ color: colors.preto, fontSize: 16 }}>Data de nascimento: <Text style={{ color: colors.rosa }}>{userData.nascimento}</Text></Text>
+            </View>
           </View>
+          {/* Bloco: Contato */}
+          <View style={{ width: '100%', marginBottom: 18, backgroundColor: colors.branco, borderRadius: 16, padding: 16, elevation: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+              <FontAwesome name="phone" size={22} color={colors.rosa} style={{ marginRight: 8 }} />
+              <Text style={{ fontWeight: 'bold', color: colors.rosa, fontSize: 18 }}>Contato</Text>
+            </View>
+            <View style={{ marginLeft: 8 }}>
+              <Text style={{ color: colors.preto, fontSize: 16 }}>E-mail: <Text style={{ color: colors.rosa }}>{userData.email}</Text></Text>
+              <Text style={{ color: colors.preto, fontSize: 16 }}>Celular/Telefone: <Text style={{ color: colors.rosa }}>{userData.telefone}</Text></Text>
+            </View>
+          </View>
+          {/* Bloco: Endereço */}
+          <View style={{ width: '100%', marginBottom: 18, backgroundColor: colors.branco, borderRadius: 16, padding: 16, elevation: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+              <FontAwesome name="map-marker" size={22} color={colors.rosa} style={{ marginRight: 8 }} />
+              <Text style={{ fontWeight: 'bold', color: colors.rosa, fontSize: 18 }}>Endereço</Text>
+            </View>
+            <View style={{ marginLeft: 8 }}>
+              <Text style={{ color: colors.preto, fontSize: 16 }}>Endereço: <Text style={{ color: colors.rosa }}>{userData.endereco}</Text></Text>
+              <Text style={{ color: colors.preto, fontSize: 16 }}>CEP: <Text style={{ color: colors.rosa }}>{userData.cep}</Text></Text>
+            </View>
+          </View>
+          {/* Bloco: Conta */}
+          <View style={{ width: '100%', marginBottom: 18, backgroundColor: colors.branco, borderRadius: 16, padding: 16, elevation: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+              <FontAwesome name="user" size={22} color={colors.rosa} style={{ marginRight: 8 }} />
+              <Text style={{ fontWeight: 'bold', color: colors.rosa, fontSize: 18 }}>Conta</Text>
+            </View>
+            <View style={{ marginLeft: 8 }}>
+              <Text style={{ color: colors.preto, fontSize: 16 }}>Usuário: <Text style={{ color: colors.rosa }}>{userData.username}</Text></Text>
+            </View>
+          </View>
+          {/* Botões de ação */}
           <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.rosa, paddingVertical: 14, paddingHorizontal: 22, borderRadius: 28, marginBottom: 14, width: '80%', alignSelf: 'center', elevation: 2 }} onPress={handleChangePassword}>
             <FontAwesome name="lock" size={22} color={colors.branco} style={{ marginRight: 8 }} />
             <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 17 }}>Alterar senha</Text>
@@ -756,7 +936,7 @@ const confirmChangePassword = async () => {
         <HomePage />
       </View>
       <View style={{ flex: 1, display: activeTab === 'encomenda' ? 'flex' : 'none' }}>
-        <EncomendasPage />
+  <EncomendasPage carrinho={carrinho} setCarrinho={setCarrinho} setActiveTab={setActiveTab} />
       </View>
       <View style={{ flex: 1, display: activeTab === 'perfil' ? 'flex' : 'none' }}>
         <PerfilPage clearAsyncStorage={clearAsyncStorage} userData={userData} handleDeleteAccount={handleDeleteAccount} handleChangePassword={handleChangePassword} />
