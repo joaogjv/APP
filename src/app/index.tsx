@@ -19,14 +19,22 @@ const carouselImages = [
   require('../../assets/images/brigadeiros_coloridos.png'),
   require('../../assets/images/amor.png'),
   require('../../assets/images/combo.png'),
-  require('../../assets/images/coracao_de_brigadeiro.png'),
+  require('../../assets/images/coracao_de_brigadeiro.png'), 
   require('../../assets/images/cha.png'),
+  
 ];
 const produtos = [
-  { nome: 'coração de brigadeiro', preco: 'R$ 25,00', img: require('../../assets/images/foto sem fundo do coracao.png') },
+  { nome: 'coração de brigadeiro', preco: 'R$ 25,00', img: require('../../assets/images/coracao_de_brigadeiro_home.png') },
   { nome: 'Prato de Brigadeiro', preco: 'R$ 40,00', img: require('../../assets/images/venda sem fundo do prato.png') },
-  { nome: 'Caixa de Brigadeiros', preco: 'R$ 30,00', img: require('../../assets/images/caixa_de_brigadeiros.png') },
+  { nome: 'Caixa de Brigadeiros', preco: 'R$ 30,00', img: require('../../assets/images/caixa_brigadeiro_home.png') },
   { nome: 'Brigadeiros Natalinos', preco: 'R$ 50,00', img: require('../../assets/images/combo natalino.png') },
+  { nome: 'Brigadeiros casal', preco: 'R$ 35,00', img: require('../../assets/images/brigadeiro_casal_home.png') },
+  { nome: 'Brigadeiros Degustação', preco: 'R$ 10,00', img: require('../../assets/images/brigadeiro_degustaçao_home.png') },
+  { nome: 'Brigadeiros Fit', preco: 'R$ 40,00', img: require('../../assets/images/brigadeiro_fit_home.png') },
+  { nome: 'Bolo de Ninho', preco: 'R$ 15,00', img: require('../../assets/images/bolo_ninho_home.png') },
+  { nome: 'Bolo de Chocolate', preco: 'R$ 15,00', img: require('../../assets/images/bolo_chocolate.png') },
+  { nome: 'Bolo de Limão', preco: 'R$ 15,00', img: require('../../assets/images/bolo_limao.png') },
+  
 ];
 
 // ===================== TIPOS =====================
@@ -287,58 +295,51 @@ export default function Index({ setUserToken }: IndexProps) {
             contentContainerStyle={{ flexDirection: 'row', paddingHorizontal: 0 }}
           >
             {carouselImages.map((img, idx) => (
-              <View key={idx} style={{ width: width * 0.9, height: 200, borderRadius: 40, overflow: 'hidden', marginRight: 0, backgroundColor: '#fff6fa', justifyContent: 'center', alignItems: 'center'}}>
+              <View key={idx} style={{ width: width * 0.9, height: 230, borderRadius: 100, overflow: 'hidden', marginRight: 0, backgroundColor: '#fff6fa', justifyContent: 'center', alignItems: 'center'}}>
                 <Image source={img} style={{ width: '100%', height: '100%', resizeMode: 'center', borderRadius: 40, backgroundColor: '#fff6fa' }} />
               </View>
             ))}
           </ScrollView>
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 0, marginBottom: 0, paddingHorizontal: 0 }}>
-          <Text style={{ fontSize: 22, fontWeight: 'bold', marginLeft: 5, marginTop: 1, color: colors.rosa }}>Sabores</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 5 }}>
-            <Text style={{ color: colors.rosa, fontSize: 15, marginRight: 2, borderColor: colors.rosa }}>ver todos os sabores</Text>
-            <Feather name="arrow-right" size={22} color={colors.rosa} />
-          </View>
-        </View>
-        <View style={{ marginTop: 20, marginBottom: 10 }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 5 }}
-          >
-            {['Brigadeiro', 'Beijinho', 'Coco', 'Morango', 'Paçoca', 'Ovomaltine', 'Nutella'].map((sabor, idx) => (
-              <View key={idx} style={{ borderWidth: 1, backgroundColor: colors.gelo, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 20, marginRight: 15, elevation: 0 }}>
-                <Text style={{ color: colors.rosa, fontWeight: 'bold', fontSize: 15 }}>{sabor}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+        
         <View style={{ marginTop: 10, marginBottom: 16 }}>
+        <Text style={{
+          fontSize: 28,
+          color: colors.rosa,
+          marginLeft: 5,
+          marginBottom: 12,
+          letterSpacing: 2,
+          textShadowOffset: { width: 2, height: 2 },
+          textShadowRadius: 6,
+          textAlign: 'left',
+        }}>Produtos em destaque</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             {produtos.map((produto, idx) => (
               <View
                 key={idx}
                 ref={produtoRefs[idx]}
                 style={{
-                  backgroundColor: colors.gelo,
-                  borderRadius: 22,
-                  padding: 16,
+                  backgroundColor: colors.branco,
+                  borderRadius: 28,
+                  padding: 18,
                   alignItems: 'center',
                   width: '48%',
-                  marginBottom: 18,
-                  elevation: 3,
-                  shadowColor: colors.preto,
-                  shadowOpacity: 0.09,
-                  shadowRadius: 8,
+                  marginBottom: 22,
+                  elevation: 7,
+                  shadowColor: colors.rosa,
+                  shadowOpacity: 0.18,
+                  shadowRadius: 16,
+                  borderWidth: 2.5,
+                  borderColor: colors.rosa
                 }}
               >
                 <TouchableOpacity activeOpacity={0.8} onPress={() => { setZoomProduto(produto); setZoomVisible(true); }}>
-                  <Image source={produto.img} style={{ width: 100, height: 110, borderRadius: 14, marginBottom: 8, resizeMode: 'cover', borderWidth: 2, borderColor: colors.rosa, backgroundColor: colors.branco }} />
+                  <Image source={produto.img} style={{ width: 120, height: 130, borderRadius: 18, marginBottom: 10, resizeMode: 'cover', borderWidth: 3, borderColor: colors.rosa, backgroundColor: colors.gelo, shadowColor: colors.rosa, shadowOpacity: 0.15, shadowRadius: 8 }} />
                 </TouchableOpacity>
                 <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.preto, marginBottom: 4, textAlign: 'center' }}>{produto.nome}</Text>
-                <Text style={{ fontSize: 15, color: colors.rosa, fontWeight: 'bold', textAlign: 'center' }}>{produto.preco}</Text>
-                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.gelo, borderRadius: 18, paddingVertical: 8, paddingHorizontal: 16, marginTop: 8, alignSelf: 'center', elevation: 2, borderWidth: 1, borderColor: colors.rosa }} onPress={() => handleComparar(produto)}>
-                    <Text style={{ color: colors.rosa, fontWeight: 'bold', fontSize: 15 }}>Comprar</Text>
+                <Text style={{ fontSize: 17, color: colors.rosa, fontWeight: 'bold', textAlign: 'center', marginBottom: 2 }}>{produto.preco}</Text>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.rosa, borderRadius: 18, paddingVertical: 8, paddingHorizontal: 16, marginTop: 8, alignSelf: 'center', elevation: 2, borderWidth: 1, borderColor: colors.rosa }} onPress={() => handleComparar(produto)}>
+                    <Text style={{ color: colors.branco,  fontSize: 17, letterSpacing: 1,  textShadowOffset: {width: 1, height: 1}, textShadowRadius: 2 }}>Comprar</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -379,9 +380,9 @@ export default function Index({ setUserToken }: IndexProps) {
         nome: 'Brigadeiro 50% cacau',
         img: require('../../assets/images/brigadeiro encomenda.jpg'),
       },
-      { nome: 'Brigadeiro com castanha', img: require('../../assets/images/brigadeiro com castanha.jpg'), },
+  { nome: 'Brigadeiro com castanha', img: require('../../assets/images/brigadeiro com castanha.jpg'), },
   { nome: 'Beijinho', img: require('../../assets/images/beijinho.png'), },
-        { nome: 'Ninho com Nutella', img: require('../../assets/images/Ninho com nutella.png') },
+  { nome: 'Ninho com Nutella', img: require('../../assets/images/Ninho com nutella.png') },
   { nome: 'Castanha', img: require('../../assets/images/castanha.png') },
   { nome: 'Doce de leite', img: require('../../assets/images/Doce de liete.png') },
   { nome: 'Casadinho', img: require('../../assets/images/Casadinho.png') },
@@ -1157,7 +1158,7 @@ const styles = StyleSheet.create({
   },
   //estilo das imagens do carrossel
   carouselImage: {
-    width: width * 0.9,//largura da imagem (90% da largura da tela)
+    width: width * 1.0,//largura da imagem (90% da largura da tela)
     height: 250,//altura da imagem
     resizeMode: 'center',//cobre toda a área da imagem
     borderRadius: 20,//bordas arredondadas
@@ -1181,7 +1182,7 @@ const styles = StyleSheet.create({
   //estilo do card de cada produto
   produtoCard: {
     backgroundColor: colors.gelo,//cor de fundo do card
-    borderRadius: 18,//bordas arredondadas
+    borderRadius: 12,//bordas arredondadas
     padding: 12,//espaçamento interno
     alignItems: 'center',//alinha o conteudo ao centro
     width: 150,//largura do card
