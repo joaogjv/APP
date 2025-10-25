@@ -1,6 +1,6 @@
 // LoginScreen.tsx
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen({ setUserToken }: { setUserToken: (token: string) => void }) {
@@ -35,7 +35,9 @@ export default function LoginScreen({ setUserToken }: { setUserToken: (token: st
         value={password}
         onChangeText={setPassword}
       />
-      <Button title={loading ? "Entrando..." : "Entrar"} onPress={handleLogin} disabled={loading} />
+      <TouchableOpacity style={[styles.loginButton, loading && styles.disabled]} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
+        <Text style={styles.loginButtonText}>{loading ? 'Entrando...' : 'Entrar'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -50,5 +52,21 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
+  },
+  loginButton: {
+    width: '100%',
+    backgroundColor: '#ff0080',
+    paddingVertical: 14,
+    borderRadius: 25,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
