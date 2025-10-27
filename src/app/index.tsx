@@ -25,13 +25,13 @@ const carouselImages = [
   
 ];
 const produtos = [
-  { nome: 'coração de brigadeiro', preco: 'R$ 25,00', img: require('../../assets/images/coracao_de_brigadeiro_home.png') },
-  { nome: 'Prato de Brigadeiro', preco: 'R$ 40,00', img: require('../../assets/images/venda sem fundo do prato.png') },
+  { nome: 'Coração de Brigadeiro', preco: 'R$ 35,00', img: require('../../assets/images/coracao_de_brigadeiro_home.png') },
+  { nome: 'Bandeja de Brigadeiro', preco: 'R$ 40,00', img: require('../../assets/images/bandeja_brigadeiro.png') },
   { nome: 'Caixa de Brigadeiros', preco: 'R$ 30,00', img: require('../../assets/images/caixa_brigadeiro_home.png') },
-  { nome: 'Brigadeiros Natalinos', preco: 'R$ 50,00', img: require('../../assets/images/combo natalino.png') },
-  { nome: 'Brigadeiros casal', preco: 'R$ 35,00', img: require('../../assets/images/brigadeiro_casal_home.png') },
-  { nome: 'Brigadeiros Degustação', preco: 'R$ 10,00', img: require('../../assets/images/brigadeiro_degustaçao_home.png') },
   { nome: 'Brigadeiros Fit', preco: 'R$ 40,00', img: require('../../assets/images/brigadeiro_fit_home.png') },
+  { nome: 'Brigadeiros Casal', preco: 'R$ 35,00', img: require('../../assets/images/brigadeiro_casal_home.png') },
+  { nome: 'Brigadeiros Degustação', preco: 'R$ 10,00', img: require('../../assets/images/brigadeiro_degustaçao_home.png') },
+  { nome: 'Bolo de Abacaxi', preco: 'R$ 15,00', img: require('../../assets/images/bolo_abacaxi.png') },
   { nome: 'Bolo de Ninho', preco: 'R$ 15,00', img: require('../../assets/images/bolo_ninho_home.png') },
   { nome: 'Bolo de Chocolate', preco: 'R$ 15,00', img: require('../../assets/images/bolo_chocolate.png') },
   { nome: 'Bolo de Limão', preco: 'R$ 15,00', img: require('../../assets/images/bolo_limao.png') },
@@ -263,7 +263,7 @@ export default function Index({ setUserToken }: IndexProps) {
         <Box alignItems="center" mb={6}>
           <Box style={{ position: 'relative', width: '100%' }}>
             <TextInput
-              style={{ width: '100%', height: 44, borderColor: colors.rosa, borderWidth: 2, borderRadius: 22, paddingHorizontal: 16, fontSize: 17, backgroundColor: colors.branco, color: colors.preto, elevation: 2 }}
+              style={{ width: '100%', height: 44, borderRadius: 25, paddingHorizontal: 16, fontSize: 17, backgroundColor: colors.branco, color: colors.preto, elevation: 4, shadowColor: colors.rosa, shadowOpacity: 0.15, shadowRadius: 5  }}
               placeholder="O que você procura?"
               placeholderTextColor="#b3afaf"
             />
@@ -280,16 +280,16 @@ export default function Index({ setUserToken }: IndexProps) {
             contentContainerStyle={{ flexDirection: 'row', paddingHorizontal: 0 }}
           >
             {carouselImages.map((img, idx) => (
-              <View key={idx} style={{ width: width * 0.9, height: 230, borderRadius: 100, overflow: 'hidden', marginRight: 0, backgroundColor: '#fff6fa', justifyContent: 'center', alignItems: 'center'}}>
-                <Image source={img} style={{ width: '100%', height: '100%', resizeMode: 'center', borderRadius: 40, backgroundColor: '#fff6fa' }} />
+              <View key={idx} style={{ width: width * 0.9, height: 230, borderRadius: 80, overflow: 'hidden', marginRight: 0, backgroundColor: '#fff6fa', justifyContent: 'center', alignItems: 'center'}}>
+                <Image source={img} style={{ width: '100%', position: 'absolute', height: '100%', resizeMode: 'cover', borderRadius: 40, backgroundColor: '#fff6fa' }} />
               </View>
             ))}
           </ScrollView>
         </Box>
 
-        <Box mt={2} mb={4}>
+        <Box mt={4} mb={4} >
           <HStack justifyContent="space-between" alignItems="center" mb={3}>
-            <Heading size="lg" color={colors.rosa}>Produtos em destaque</Heading>
+            <Heading size="xl" color={colors.rosa} textAlign="left" letterSpacing={1}>Produtos em destaque</Heading>
           </HStack>
 
           <VStack space={4}>
@@ -298,19 +298,18 @@ export default function Index({ setUserToken }: IndexProps) {
                 <Box
                   key={idx}
                   ref={produtoRefs[idx]}
-                  bg={colors.branco}
+                  bg={colors.gelo}
                   borderRadius={28}
                   p={4}
                   width="48%"
-                  mb={5}
-                  shadow={2}
-                  style={{ borderWidth: 2.5, borderColor: colors.rosa, minHeight: 260, justifyContent: 'space-between', alignItems: 'center' }}
+                  mb={6}
+                  style={{ minHeight: 260, justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 5 }}
                 >
                   <TouchableOpacity activeOpacity={0.8} onPress={() => { setZoomProduto(produto); setZoomVisible(true); }}>
-                    <Image source={produto.img} style={{ width: 120, height: 130, borderRadius: 18, marginBottom: 10, resizeMode: 'cover', borderWidth: 3, borderColor: colors.rosa, backgroundColor: colors.gelo }} />
+                    <Image source={produto.img} style={{ width: 120, height: 130, borderRadius: 18, marginBottom: 10, resizeMode: 'cover', borderWidth: 2, borderColor: colors.rosa, backgroundColor: colors.gelo, shadowColor: colors.rosa, shadowOpacity: 0.15, shadowRadius: 8 }} />
                   </TouchableOpacity>
-                  <NBText fontSize="md" fontWeight="bold" color={colors.preto} textAlign="center">{produto.nome}</NBText>
-                  <NBText fontSize="md" color={colors.rosa} fontWeight="bold" textAlign="center" mb={2}>{produto.preco}</NBText>
+                  <NBText fontSize="15" fontWeight="bold" color={colors.preto} textAlign="center">{produto.nome}</NBText>
+                  <NBText fontSize="20" color={colors.rosa} fontWeight="700" textAlign="center" mb={2}>{produto.preco}</NBText>
                   <TouchableOpacity
                     style={{
                       flexDirection: 'row',
@@ -321,12 +320,12 @@ export default function Index({ setUserToken }: IndexProps) {
                       paddingVertical: 10,
                       paddingHorizontal: 20,
                       marginTop: 8,
-                      alignSelf: 'stretch',
+                      alignSelf: 'center',
                       elevation: 4,
                     }}
                     onPress={() => handleComparar(produto)}
                   >
-                    <Text style={{ color: colors.branco, fontSize: 16, fontWeight: '700' }}>
+                    <Text style={{ color: colors.branco, fontSize: 16, fontWeight: '700', letterSpacing: 0.5 }}>
                       Comprar
                     </Text>
                   </TouchableOpacity>
