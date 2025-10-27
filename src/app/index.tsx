@@ -31,7 +31,7 @@ const produtos = [
   { nome: 'Brigadeiros Fit', preco: 'R$ 40,00', img: require('../../assets/images/brigadeiro_fit_home.png') },
   { nome: 'Brigadeiros Casal', preco: 'R$ 35,00', img: require('../../assets/images/brigadeiro_casal_home.png') },
   { nome: 'Brigadeiros Degustação', preco: 'R$ 10,00', img: require('../../assets/images/brigadeiro_degustaçao_home.png') },
-  { nome: 'Bolo de Abacaxi', preco: 'R$ 15,00', img: require('../../assets/images/bolo_abacaxi.png') },
+  { nome: 'Bolo de Abacaxi', preco: 'R$ 15,00', img: require('../../assets/images/bolo_abacaxi_home.png') },
   { nome: 'Bolo de Ninho', preco: 'R$ 15,00', img: require('../../assets/images/bolo_ninho_home.png') },
   { nome: 'Bolo de Chocolate', preco: 'R$ 15,00', img: require('../../assets/images/bolo_chocolate.png') },
   { nome: 'Bolo de Limão', preco: 'R$ 15,00', img: require('../../assets/images/bolo_limao.png') },
