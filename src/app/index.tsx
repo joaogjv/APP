@@ -45,6 +45,8 @@ interface IndexProps {
 
 // ===================== COMPONENTE PRINCIPAL =====================
 export default function Index({ setUserToken }: IndexProps) {
+  // Estado para pesquisa de produtos
+  const [searchText, setSearchText] = useState('');
   // Estado do carrinho de compras
   const [carrinho, setCarrinho] = useState<any[]>([]);
   // Estado da aba ativa
@@ -174,11 +176,26 @@ export default function Index({ setUserToken }: IndexProps) {
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
                   <Box bg={colors.gelo} borderRadius={18} p={6} alignItems="center" width={320}>
                     <NBText fontSize="lg" fontWeight="bold" color={colors.rosa} mb={4}>Forma de pagamento</NBText>
-                    {['Pix', 'Dinheiro', 'Crédito'].map(opcao => (
-                      <Button key={opcao} variant={formaPagamento === opcao ? 'solid' : 'outline'} colorScheme="pink" borderRadius={12} width="100%" mb={3} onPress={() => setFormaPagamento(opcao)}>
-                        <NBText color={formaPagamento === opcao ? colors.branco : colors.rosa} fontWeight="bold">{opcao}</NBText>
-                      </Button>
-                    ))}
+                    {['Pix', 'Dinheiro', 'Crédito'].map(opcao => {
+                      const selecionado = formaPagamento === opcao;
+                      return (
+                        <Button
+                          key={opcao}
+                          borderRadius={14}
+                          width="100%"
+                          mb={3}
+                          onPress={() => setFormaPagamento(opcao)}
+                          style={{
+                            backgroundColor: selecionado ? colors.branco : colors.gelo,
+                            borderWidth: 2,
+                            borderColor: selecionado ? colors.rosa : '#ffd1ea',
+                            elevation: selecionado ? 2 : 0,
+                          }}
+                        >
+                          <NBText color={selecionado ? colors.rosa : colors.rosa} fontWeight="bold">{opcao}</NBText>
+                        </Button>
+                      );
+                    })}
                     {formaPagamento === 'Pix' && (
                       <VStack mt={2} mb={2} alignItems="center">
                         <NBText fontSize="sm" color={colors.preto}>Chave Pix:</NBText>
@@ -217,10 +234,10 @@ export default function Index({ setUserToken }: IndexProps) {
   // Estado para modal de zoom do produto
   const [zoomVisible, setZoomVisible] = useState(false);
   const [zoomProduto, setZoomProduto] = useState<{img: any, nome: string, preco: string} | null>(null);
-    // Função para remover item do carrinho
-    const handleRemoverItem = (idx: number) => {
-      setCarrinho(prev => prev.filter((_, i) => i !== idx));
-    };
+  // Função para remover item do carrinho
+  const handleRemoverItem = (idx: number) => {
+    setCarrinho(prev => prev.filter((_, i) => i !== idx));
+  };
   // Array de refs para os cards dos produtos
   const produtoRefs = useRef(produtos.map(() => React.createRef<View>())).current;
 
@@ -228,130 +245,212 @@ export default function Index({ setUserToken }: IndexProps) {
   const carrinhoRef = useRef<View>(null);
   // Estado do modal do carrinho
   const [showCarrinhoModal, setShowCarrinhoModal] = useState(false);
-    const carouselRef = useRef<ScrollView>(null);
-    const [carouselIndex, setCarouselIndex] = useState(0);
-    const intervalRef = useRef<number | null>(null);
+  const carouselRef = useRef<ScrollView>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const intervalRef = useRef<number | null>(null);
 
-    useEffect(() => {
-      intervalRef.current = setInterval(() => {
-        setCarouselIndex(prev => {
-          const next = prev + 1 < carouselImages.length ? prev + 1 : 0;
-          if (carouselRef.current) {
-            carouselRef.current.scrollTo({ x: next * width * 0.9, animated: true });
-          }
-          return next;
-        });
-      }, 3000);
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      setCarouselIndex(prev => {
+        const next = prev + 1 < carouselImages.length ? prev + 1 : 0;
+        if (carouselRef.current) {
+          carouselRef.current.scrollTo({ x: next * width * 0.9, animated: true });
         }
-      };
-    }, []);
-
-    // Adiciona produto ao carrinho sem animação
-    const handleComparar = (produto: any) => {
-      setCarrinho(prev => [...prev, produto]);
-      Alert.alert('Produto adicionado ao carrinho!', `${produto.nome} foi adicionado para comparação.`);
+        return next;
+      });
+    }, 3000);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
+  }, []);
 
-    return (
-      <ScrollView style={{ flex: 1, backgroundColor: '#fff6fa' }} contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
-        <Heading size="xl" color={colors.rosa} textAlign="center" mb={4}>Petit Brigaderia</Heading>
+  // Adiciona produto ao carrinho sem animação
+  const handleComparar = (produto: any) => {
+    setCarrinho(prev => [...prev, produto]);
+    Alert.alert('Produto adicionado ao carrinho!', `${produto.nome} foi adicionado para comparação.`);
+  };
 
-        <Box alignItems="center" mb={6}>
-          <Box style={{ position: 'relative', width: '100%' }}>
+  // Estado para texto digitado no campo de pesquisa
+  const [inputText, setInputText] = useState(searchText);
+
+  // Filtra produtos usando useMemo para evitar re-renderizações desnecessárias
+  const produtosFiltrados = React.useMemo(() => {
+    const texto = searchText.trim().toLowerCase();
+    if (!texto) return produtos;
+    return produtos.filter(p => p.nome.toLowerCase().includes(texto));
+  }, [searchText]);
+
+  // Se houver busca, mostrar só a lista filtrada
+  const pesquisando = !!searchText.trim();
+
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: '#fff6fa' }} contentContainerStyle={{ padding: 24, paddingBottom: 120 }}>
+  <Heading size="xl" color={colors.rosa} textAlign="center" mb={8} mt={4}>Petit Brigaderia</Heading>
+      <Box alignItems="center" mb={6}>
+        <Box style={{ position: 'relative', width: '100%', flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flex: 1 }}>
             <TextInput
               style={{ width: '100%', height: 44, borderColor: colors.rosa, borderWidth: 2, borderRadius: 22, paddingHorizontal: 16, fontSize: 17, backgroundColor: colors.branco, color: colors.preto, elevation: 2 }}
               placeholder="O que você procura?"
               placeholderTextColor="#b3afaf"
+              value={inputText}
+              onChangeText={setInputText}
+              onSubmitEditing={() => setSearchText(inputText)}
+              returnKeyType="search"
             />
             <FontAwesome name="search" size={22} color={colors.rosa} style={{ position: 'absolute', right: 18, top: '50%', transform: [{ translateY: -11 }], zIndex: 1 }} />
-          </Box>
+          </View>
+          {pesquisando && (
+            <TouchableOpacity
+              onPress={() => { setSearchText(''); setInputText(''); }}
+              style={{ marginLeft: 12 }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ color: '#e53935', fontWeight: 'bold', fontSize: 16 }}>Cancelar</Text>
+            </TouchableOpacity>
+          )}
         </Box>
+      </Box>
 
-        {/* Mantive o carrossel exatamente como estava para não alterar as bordas */}
-        <Box mb={4} bg="#fff6fa" borderRadius={20}>
-          <ScrollView
-            ref={carouselRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ flexDirection: 'row', paddingHorizontal: 0 }}
-          >
-            {carouselImages.map((img, idx) => (
-              <View key={idx} style={{ width: width * 0.9, height: 230, borderRadius: 100, overflow: 'hidden', marginRight: 0, backgroundColor: '#fff6fa', justifyContent: 'center', alignItems: 'center'}}>
-                <Image source={img} style={{ width: '100%', height: '100%', resizeMode: 'center', borderRadius: 40, backgroundColor: '#fff6fa' }} />
-              </View>
-            ))}
-          </ScrollView>
-        </Box>
-
-        <Box mt={2} mb={4}>
+      {pesquisando ? (
+        <>
           <HStack justifyContent="space-between" alignItems="center" mb={3}>
-            <Heading size="lg" color={colors.rosa}>Produtos em destaque</Heading>
+            <Heading size="lg" color={colors.rosa}>Resultados da pesquisa</Heading>
+              {/* Botão '<< Voltar' removido conforme solicitado */}
           </HStack>
-
           <VStack space={4}>
             <HStack flexWrap="wrap" justifyContent="space-between">
-              {produtos.map((produto, idx) => (
-                <Box
-                  key={idx}
-                  ref={produtoRefs[idx]}
-                  bg={colors.branco}
-                  borderRadius={28}
-                  p={4}
-                  width="48%"
-                  mb={5}
-                  shadow={2}
-                  style={{ borderWidth: 2.5, borderColor: colors.rosa, minHeight: 260, justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <TouchableOpacity activeOpacity={0.8} onPress={() => { setZoomProduto(produto); setZoomVisible(true); }}>
-                    <Image source={produto.img} style={{ width: 120, height: 130, borderRadius: 18, marginBottom: 10, resizeMode: 'cover', borderWidth: 3, borderColor: colors.rosa, backgroundColor: colors.gelo }} />
-                  </TouchableOpacity>
-                  <NBText fontSize="md" fontWeight="bold" color={colors.preto} textAlign="center">{produto.nome}</NBText>
-                  <NBText fontSize="md" color={colors.rosa} fontWeight="bold" textAlign="center" mb={2}>{produto.preco}</NBText>
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: colors.rosa,
-                      borderRadius: 18,
-                      paddingVertical: 10,
-                      paddingHorizontal: 20,
-                      marginTop: 8,
-                      alignSelf: 'stretch',
-                      elevation: 4,
-                    }}
-                    onPress={() => handleComparar(produto)}
+              {produtosFiltrados.length === 0 ? (
+                <NBText color={colors.preto} fontSize="md" textAlign="center" mt={4} width="100%">Nenhum produto encontrado.</NBText>
+              ) : (
+                produtosFiltrados.map((produto, idx) => (
+                  <Box
+                    key={idx}
+                    ref={produtoRefs[idx]}
+                    bg={colors.branco}
+                    borderRadius={28}
+                    p={4}
+                    width="48%"
+                    mb={5}
+                    shadow={2}
+                    style={{ borderWidth: 2.5, borderColor: colors.rosa, minHeight: 260, justifyContent: 'space-between', alignItems: 'center' }}
                   >
-                    <Text style={{ color: colors.branco, fontSize: 16, fontWeight: '700' }}>
-                      Comprar
-                    </Text>
-                  </TouchableOpacity>
-                </Box>
-              ))}
+                    <TouchableOpacity activeOpacity={0.8} onPress={() => { setZoomProduto(produto); setZoomVisible(true); }}>
+                      <Image source={produto.img} style={{ width: 120, height: 130, borderRadius: 18, marginBottom: 10, resizeMode: 'cover', borderWidth: 3, borderColor: colors.rosa, backgroundColor: colors.gelo }} />
+                    </TouchableOpacity>
+                    <NBText fontSize="md" fontWeight="bold" color={colors.preto} textAlign="center">{produto.nome}</NBText>
+                    <NBText fontSize="md" color={colors.rosa} fontWeight="bold" textAlign="center" mb={2}>{produto.preco}</NBText>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: colors.rosa,
+                        borderRadius: 18,
+                        paddingVertical: 10,
+                        paddingHorizontal: 20,
+                        marginTop: 8,
+                        alignSelf: 'stretch',
+                        elevation: 4,
+                      }}
+                      onPress={() => handleComparar(produto)}
+                    >
+                      <Text style={{ color: colors.branco, fontSize: 16, fontWeight: '700' }}>
+                        Adicionar ao carrinho
+                      </Text>
+                    </TouchableOpacity>
+                  </Box>
+                ))
+              )}
             </HStack>
           </VStack>
-        </Box>
+        </>
+      ) : (
+        <>
+          {/* Mantive o carrossel exatamente como estava para não alterar as bordas */}
+          <Box mb={4} bg="#fff6fa" borderRadius={20}>
+            <ScrollView
+              ref={carouselRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ flexDirection: 'row', paddingHorizontal: 0 }}
+            >
+              {carouselImages.map((img, idx) => (
+                <View key={idx} style={{ width: width * 0.9, height: 230, borderRadius: 100, overflow: 'hidden', marginRight: 0, backgroundColor: '#fff6fa', justifyContent: 'center', alignItems: 'center'}}>
+                  <Image source={img} style={{ width: '100%', height: '100%', resizeMode: 'center', borderRadius: 40, backgroundColor: '#fff6fa' }} />
+                </View>
+              ))}
+            </ScrollView>
+          </Box>
+          <Box mt={2} mb={4}>
+            <HStack justifyContent="space-between" alignItems="center" mb={3}>
+              <Heading size="lg" color={colors.rosa}>Produtos em destaque</Heading>
+            </HStack>
+            <VStack space={4}>
+              <HStack flexWrap="wrap" justifyContent="space-between">
+                {produtos.map((produto, idx) => (
+                  <Box
+                    key={idx}
+                    ref={produtoRefs[idx]}
+                    bg={colors.branco}
+                    borderRadius={28}
+                    p={4}
+                    width="48%"
+                    mb={5}
+                    shadow={2}
+                    style={{ borderWidth: 2.5, borderColor: colors.rosa, minHeight: 260, justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <TouchableOpacity activeOpacity={0.8} onPress={() => { setZoomProduto(produto); setZoomVisible(true); }}>
+                      <Image source={produto.img} style={{ width: 120, height: 130, borderRadius: 18, marginBottom: 10, resizeMode: 'cover', borderWidth: 3, borderColor: colors.rosa, backgroundColor: colors.gelo }} />
+                    </TouchableOpacity>
+                    <NBText fontSize="md" fontWeight="bold" color={colors.preto} textAlign="center">{produto.nome}</NBText>
+                    <NBText fontSize="md" color={colors.rosa} fontWeight="bold" textAlign="center" mb={2}>{produto.preco}</NBText>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: colors.rosa,
+                        borderRadius: 18,
+                        paddingVertical: 10,
+                        paddingHorizontal: 20,
+                        marginTop: 8,
+                        alignSelf: 'stretch',
+                        elevation: 4,
+                      }}
+                      onPress={() => handleComparar(produto)}
+                    >
+                      <Text style={{ color: colors.branco, fontSize: 16, fontWeight: '700' }}>
+                        Adicionar ao carrinho
+                      </Text>
+                    </TouchableOpacity>
+                  </Box>
+                ))}
+              </HStack>
+            </VStack>
+          </Box>
+        </>
+      )}
 
-        {/* Modal de zoom do produto */}
-        <Modal visible={zoomVisible && !!zoomProduto} transparent animationType="fade">
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-            <View style={{ backgroundColor: colors.branco, borderRadius: 30, padding: 18, alignItems: 'center', width: '85%' }}>
-              {zoomProduto?.img && (
-                <Image source={zoomProduto.img} style={{ width: 260, height: 260, borderRadius: 22, marginBottom: 18, resizeMode: 'contain', backgroundColor: colors.branco, borderWidth: 3, borderColor: colors.rosa }} />
-              )}
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.rosa, marginBottom: 8, textAlign: 'center' }}>{zoomProduto?.nome}</Text>
-              <Text style={{ fontSize: 18, color: colors.preto, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>{zoomProduto?.preco}</Text>
-              <TouchableOpacity style={{ marginTop: 8, backgroundColor: colors.rosa, borderRadius: 18, paddingVertical: 10, paddingHorizontal: 32 }} onPress={() => setZoomVisible(false)}>
-                <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 18 }}>Fechar</Text>
-              </TouchableOpacity>
-            </View>
+      {/* Modal de zoom do produto */}
+      <Modal visible={zoomVisible && !!zoomProduto} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: colors.branco, borderRadius: 30, padding: 18, alignItems: 'center', width: '85%' }}>
+            {zoomProduto?.img && (
+              <Image source={zoomProduto.img} style={{ width: 260, height: 260, borderRadius: 22, marginBottom: 18, resizeMode: 'contain', backgroundColor: colors.branco, borderWidth: 3, borderColor: colors.rosa }} />
+            )}
+            <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.rosa, marginBottom: 8, textAlign: 'center' }}>{zoomProduto?.nome}</Text>
+            <Text style={{ fontSize: 18, color: colors.preto, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' }}>{zoomProduto?.preco}</Text>
+            <TouchableOpacity style={{ marginTop: 8, backgroundColor: colors.rosa, borderRadius: 18, paddingVertical: 10, paddingHorizontal: 32 }} onPress={() => setZoomVisible(false)}>
+              <Text style={{ color: colors.branco, fontWeight: 'bold', fontSize: 18 }}>Fechar</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </ScrollView>
+        </View>
+      </Modal>
+    </ScrollView>
     );
   });
 
@@ -427,7 +526,7 @@ export default function Index({ setUserToken }: IndexProps) {
                 </VStack>
                 <VStack alignItems="flex-end" space={2}>
                   <Button size="sm" bg={colors.rosa} borderRadius={20} onPress={() => { setModalComprarIdx(idx); setQuantidadeComprar(quantidades[idx] === 0 ? '' : String(quantidades[idx])); }}>
-                    <NBText color={colors.branco} fontWeight="bold">Comprar</NBText>
+                    <NBText color={colors.branco} fontWeight="bold">Adicionar ao carrinho</NBText>
                   </Button>
                 </VStack>
               </HStack>
@@ -507,11 +606,26 @@ export default function Index({ setUserToken }: IndexProps) {
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
             <Box bg={colors.gelo} borderRadius={18} p={6} width={320} alignItems="center">
               <NBText fontSize="lg" fontWeight="bold" color={colors.rosa} mb={4}>Escolha a forma de pagamento:</NBText>
-              {['Pix', 'Dinheiro', 'Crédito'].map(opcao => (
-                <Button key={opcao} variant={formaPagamento === opcao ? 'solid' : 'outline'} colorScheme="pink" borderRadius={20} width="100%" mb={3} onPress={() => setFormaPagamento(opcao)}>
-                  <NBText color={formaPagamento === opcao ? colors.branco : colors.rosa} fontWeight="bold">{opcao}</NBText>
-                </Button>
-              ))}
+              {['Pix', 'Dinheiro', 'Crédito'].map(opcao => {
+                const selecionado = formaPagamento === opcao;
+                return (
+                  <Button
+                    key={opcao}
+                    borderRadius={20}
+                    width="100%"
+                    mb={3}
+                    onPress={() => setFormaPagamento(opcao)}
+                    style={{
+                      backgroundColor: selecionado ? colors.branco : colors.gelo,
+                      borderWidth: 2,
+                      borderColor: selecionado ? colors.rosa : '#ffd1ea',
+                      elevation: selecionado ? 2 : 0,
+                    }}
+                  >
+                    <NBText color={selecionado ? colors.rosa : colors.rosa} fontWeight="bold">{opcao}</NBText>
+                  </Button>
+                );
+              })}
               <Button bg={colors.rosa} borderRadius={20} width="100%" onPress={() => {
                 if (formaPagamento) {
                   const novosItens = produtosEncomenda
@@ -617,7 +731,7 @@ export default function Index({ setUserToken }: IndexProps) {
                     <NBText color={colors.preto} fontSize="sm">Ações</NBText>
                     <VStack mt={2} space={2} width="100%">
                       <Button onPress={handleChangePassword} bg={colors.rosa} borderRadius={20} _text={{ fontWeight: 'bold' }}>Alterar senha</Button>
-                      <Button onPress={handleDeleteAccount} bg={colors.rosa} borderRadius={20} _text={{ color: colors.branco, fontWeight: 'bold' }} leftIcon={<FontAwesome name="trash" size={14} color={colors.rosa} />}>Excluir conta</Button>
+                      <Button onPress={() => { setDeletePassword(''); setShowDeleteModal(true); }} bg={colors.rosa} borderRadius={20} _text={{ color: colors.branco, fontWeight: 'bold' }}>Excluir conta</Button>
                     </VStack>
                   </Box>
                 </HStack>
@@ -845,8 +959,15 @@ export default function Index({ setUserToken }: IndexProps) {
 
   // Função para abrir modal de exclusão
   const handleDeleteAccount = () => {
-    setDeletePassword('');
-    setShowDeleteModal(true);
+    // Exclui a conta do usuário logado imediatamente
+    (async () => {
+      const data = await AsyncStorage.getItem('users');
+      let users = data ? JSON.parse(data) : [];
+      const filtered = users.filter((u: any) => u.username !== loggedUser);
+      await AsyncStorage.setItem('users', JSON.stringify(filtered));
+      await clearAsyncStorage();
+      alert('Conta excluída!');
+    })();
   };
 
   // Função para confirmar exclusão
@@ -865,7 +986,7 @@ export default function Index({ setUserToken }: IndexProps) {
     return;
   }
 
-  if (user.password !== deletePassword) {
+  if ((user.password || '').trim() !== (deletePassword || '').trim()) {
     Alert.alert('Erro', 'Senha incorreta!');
     return;
   }
@@ -898,13 +1019,21 @@ const confirmChangePassword = async () => {
   const data = await AsyncStorage.getItem('users');
   let users = data ? JSON.parse(data) : [];
   const idx = users.findIndex((u: any) => u.username === loggedUser);
-  if (idx === -1 || users[idx].password !== currentPassword) {
+  if (idx === -1) {
+    alert('Usuário não encontrado!');
+    return;
+  }
+  // Corrige a verificação usando o userData.password
+  if (userData && userData.password !== currentPassword) {
     alert('Senha atual incorreta!');
     return;
   }
-  users[idx].password = newPassword;
+  // Atualiza o objeto do usuário no array corretamente
+  const updatedUser = { ...users[idx], password: newPassword };
+  users[idx] = updatedUser;
   await AsyncStorage.setItem('users', JSON.stringify(users));
-  setUserData(users[idx]);
+  setUserData(updatedUser);
+  setPassword(''); // Limpa campo de senha
   setShowChangeModal(false);
   alert('Senha alterada com sucesso!');
 };
@@ -994,6 +1123,55 @@ const confirmChangePassword = async () => {
       <View style={{ flex: 1, display: activeTab === 'perfil' ? 'flex' : 'none' }}>
         <PerfilPage clearAsyncStorage={clearAsyncStorage} userData={userData} handleDeleteAccount={handleDeleteAccount} handleChangePassword={handleChangePassword} />
         {/* ...modais de perfil... */}
+        {/* Modal de exclusão de conta */}
+        <Modal visible={showDeleteModal} transparent animationType="fade" onRequestClose={() => setShowDeleteModal(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.gelo, borderRadius: 18, padding: 24, width: 320, alignItems: 'center' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.rosa, marginBottom: 18 }}>Excluir conta</Text>
+              <Text style={{ color: colors.preto, marginBottom: 10 }}>Digite sua senha atual para confirmar:</Text>
+              <TextInput
+                style={{ width: '100%', height: 50, borderColor: colors.rosa, borderWidth: 2, borderRadius: 25, paddingHorizontal: 18, fontSize: 17, backgroundColor: colors.branco, color: colors.preto, marginBottom: 15 }}
+                placeholder="Senha atual"
+                placeholderTextColor="#b3afaf"
+                secureTextEntry
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+              />
+              <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
+                <Button bg={colors.rosa} borderRadius={20} flex={1} mr={2} onPress={confirmDeleteAccount} _text={{ color: colors.branco, fontWeight: 'bold' }}>Confirmar</Button>
+                <Button bg={colors.preto} borderRadius={20} flex={1} ml={2} onPress={() => { setDeletePassword(''); setShowDeleteModal(false); }} _text={{ color: colors.branco, fontWeight: 'bold' }}>Cancelar</Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        {/* Modal de alteração de senha */}
+        <Modal visible={showChangeModal} transparent animationType="fade" onRequestClose={() => setShowChangeModal(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.gelo, borderRadius: 18, padding: 24, width: 320, alignItems: 'center' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.rosa, marginBottom: 18 }}>Alterar senha</Text>
+              <TextInput
+                style={{ width: '100%', height: 50, borderColor: colors.rosa, borderWidth: 2, borderRadius: 25, paddingHorizontal: 18, fontSize: 17, backgroundColor: colors.branco, color: colors.preto, marginBottom: 15 }}
+                placeholder="Senha atual"
+                placeholderTextColor="#b3afaf"
+                secureTextEntry
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+              />
+              <TextInput
+                style={{ width: '100%', height: 50, borderColor: colors.rosa, borderWidth: 2, borderRadius: 25, paddingHorizontal: 18, fontSize: 17, backgroundColor: colors.branco, color: colors.preto, marginBottom: 15 }}
+                placeholder="Nova senha"
+                placeholderTextColor="#b3afaf"
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+              <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
+                <Button bg={colors.rosa} borderRadius={20} flex={1} mr={2} onPress={confirmChangePassword} _text={{ color: colors.branco, fontWeight: 'bold' }}>Confirmar</Button>
+                <Button bg={colors.preto} borderRadius={20} flex={1} ml={2} onPress={() => setShowChangeModal(false)} _text={{ color: colors.branco, fontWeight: 'bold' }}>Cancelar</Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
       <View style={{ flex: 1, display: activeTab === 'carrinho' ? 'flex' : 'none' }}>
         <CarrinhoPage />
